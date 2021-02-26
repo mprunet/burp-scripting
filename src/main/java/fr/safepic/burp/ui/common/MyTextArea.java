@@ -5,6 +5,8 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.util.prefs.Preferences;
 
@@ -16,6 +18,8 @@ public class MyTextArea extends JPanel implements PreferenceFriendly {
     private CardLayout layout = new CardLayout();
     private boolean colored = true;
 
+
+
     public MyTextArea(String name) {
         setName(name);
         setLayout(layout);
@@ -23,6 +27,47 @@ public class MyTextArea extends JPanel implements PreferenceFriendly {
         add(coloredAreaSP, "colored");
         add(normalAreaSP, "normal");
         layout.show(this, "colored");
+
+        normalArea.getDocument().addDocumentListener(new ScriptDocumentListener(false));
+        coloredArea.getDocument().addDocumentListener(new ScriptDocumentListener(true));
+    }
+    public void addDocumentListener(DocumentListener listener) {
+        listenerList.add(DocumentListener.class, listener);
+    }
+
+
+    private class ScriptDocumentListener implements DocumentListener {
+        private boolean fireWhenColored;
+        ScriptDocumentListener(boolean fireWhenColored){
+            this.fireWhenColored = fireWhenColored;
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            if (fireWhenColored == colored) {
+                for (DocumentListener listener : listenerList.getListeners(DocumentListener.class)) {
+                    listener.insertUpdate(e);
+                }
+            }
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            if (fireWhenColored == colored) {
+                for (DocumentListener listener : listenerList.getListeners(DocumentListener.class)) {
+                    listener.removeUpdate(e);
+                }
+            }
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            if (fireWhenColored == colored) {
+                for (DocumentListener listener : listenerList.getListeners(DocumentListener.class)) {
+                    listener.changedUpdate(e);
+                }
+            }
+        }
     }
 
     public void setColored(boolean b) {

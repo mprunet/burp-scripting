@@ -70,7 +70,7 @@ public class ScriptModifier extends AbstractMessageModifier{
             cx.evaluateString(scope, fullScript, "EvaluationScript", 1, null);
             tools.commit();
         } catch (Exception e) {
-            this.panel.printLn(e);
+            this.panel.printException(e);
         } finally {
             // Exit the Context. This removes the association between the Context and the current thread and is an
             // essential cleanup action. There should be a call to exit for every call to enter.

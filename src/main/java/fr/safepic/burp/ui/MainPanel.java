@@ -1,19 +1,21 @@
 package fr.safepic.burp.ui;
 
 import burp.IBurpExtenderCallbacks;
+import fr.safepic.burp.ui.common.CloseableTabbedPane;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class MainPanel extends JPanel {
-    JTabbedPane tabbedPane = new JTabbedPane();
     IBurpExtenderCallbacks callbacks;
     ScriptPanel scriptPanel;
+    ScriptListPanel refPanel;
 
     public MainPanel(IBurpExtenderCallbacks callbacks) {
         setLayout(new BorderLayout());
-        add(tabbedPane, BorderLayout.CENTER);
-        scriptPanel = new ScriptPanel(callbacks, "Script", tabbedPane);
+        refPanel = new ScriptListPanel();
+        add(refPanel.getTabbedPane(), BorderLayout.CENTER);
+        //scriptPanel = new ScriptPanel(callbacks, "Script", tabbedPane);
     }
 
     public void unload() {
