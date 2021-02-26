@@ -25,7 +25,34 @@ public class MyTextArea extends JPanel {
     private final CardLayout layout = new CardLayout();
     private boolean colored = true;
 
+    private class MenuEntry {
+        JPopupMenu popup;
+        JMenu menu;
 
+        public MenuEntry(JMenu menu) {
+            this.menu = menu;
+        }
+
+        public MenuEntry(JPopupMenu popup) {
+            this.popup = popup;
+        }
+
+        public void add(JMenu child) {
+            if (popup != null) {
+                popup.add(child);
+            } else {
+                menu.add(child);
+            }
+        }
+        public void add(JMenuItem child) {
+            if (popup != null) {
+                popup.add(child);
+            } else {
+                menu.add(child);
+            }
+        }
+
+    }
 
     public MyTextArea(String name) {
         setName(name);
@@ -39,8 +66,9 @@ public class MyTextArea extends JPanel {
 
         normalArea.getDocument().addDocumentListener(new ScriptDocumentListener(false));
         coloredArea.getDocument().addDocumentListener(new ScriptDocumentListener(true));
-        JPopupMenu menu = coloredArea.getPopupMenu();
-        JMenu sample = new JMenu("Code sample");
+        JPopupMenu coloredAreaMenu = coloredArea.getPopupMenu();
+        JPopupMenu normalAreaMenu = new JPopupMenu();
+        normalArea.setComponentPopupMenu(normalAreaMenu);
         try {
             URI uri = MyTextArea.class.getResource("/sample-menu-item").toURI();
             if ("jar".equals(uri.getScheme())) {
@@ -53,18 +81,17 @@ public class MyTextArea extends JPanel {
                 }
             }
             Path myPath = Paths.get(uri);
-            Stack<JMenu> stack = new Stack<>();
-            stack.push(sample);
-            List<Path> paths = new ArrayList<>();
+            Stack<MenuEntry> stack = new Stack<>();
 
-            Files.walkFileTree(myPath, new SimpleFileVisitor<Path>() {
+            List<Path> paths = new ArrayList<>();
+            SimpleFileVisitor visitor = new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                     if (!myPath.equals(dir)) {
-                        JMenu parent = stack.peek();
+                        MenuEntry parent = stack.peek();
                         JMenu child = new JMenu(dir.getFileName().toString());
                         parent.add(child);
-                        stack.push(child);
+                        stack.push(new MenuEntry(child));
                     }
                     return super.preVisitDirectory(dir, attrs);
                 }
@@ -83,7 +110,6 @@ public class MyTextArea extends JPanel {
                             .forEach(file->{
                                 String value = file.getFileName().toString();
                                 value = value.substring(0, value.length() - 4);
-
                                 stack.peek().add(new JMenuItem(new AbstractAction(value) {
                                     @Override
                                     public void actionPerformed(ActionEvent e) {
@@ -97,7 +123,18 @@ public class MyTextArea extends JPanel {
                     }
                     return super.postVisitDirectory(dir, exc);
                 }
-            });
+            };
+
+            JMenu sample = new JMenu("Code sample");
+            coloredAreaMenu.add(sample);
+            stack.push(new MenuEntry(sample));
+            Files.walkFileTree(myPath, visitor);
+            stack.clear();
+
+            stack.push(new MenuEntry(normalAreaMenu));
+            Files.walkFileTree(myPath, visitor);
+
+
 /*            Stream<Path> walk = Files.walk(myPath, 2);
             Map<Path, JMenu> menus = new
             walk.forEach(path -> {
@@ -106,7 +143,7 @@ public class MyTextArea extends JPanel {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        menu.add(sample);
+
 
 
     }
