@@ -1,18 +1,17 @@
-package fr.safepic.burp.ui.scripts;
+package fr.safepic.burp.script.ui.model;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class ScriptTableModel extends AbstractTableModel implements TableCellRenderer {
-    private DefaultTableCellRenderer DEFAULT_RENDERER = new DefaultTableCellRenderer();
+    private final DefaultTableCellRenderer DEFAULT_RENDERER = new DefaultTableCellRenderer();
     private volatile Color defaultBackgroundColor;
 
-    private List<ScriptRef> scripts = new ArrayList<>();
+    private final List<ScriptRef> scripts;
 
     public ScriptTableModel(List<ScriptRef> scripts) {
         this.scripts =scripts;

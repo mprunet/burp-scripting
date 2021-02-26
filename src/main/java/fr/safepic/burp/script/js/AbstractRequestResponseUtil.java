@@ -1,29 +1,25 @@
-package fr.safepic.burp.js;
+package fr.safepic.burp.script.js;
 
 import burp.IExtensionHelpers;
 import burp.IHttpRequestResponse;
 import burp.IRequestInfo;
-import fr.safepic.burp.AbstractMessageModifier;
-import fr.safepic.burp.ui.ScriptPanel;
+import fr.safepic.burp.script.LogCallback;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public abstract class AbstractRequestResponseUtil {
-    private ScriptPanel panel;
-    private AbstractMessageModifier modifier;
-    private IExtensionHelpers helpers;
-    private IHttpRequestResponse requestResponse;
+    protected final LogCallback logCallback;
+    private final IExtensionHelpers helpers;
+    private final IHttpRequestResponse requestResponse;
     private IRequestInfo request;
     private byte[] requestBytes;
     private List<String> initialRequestHeader;
 
 
-    public AbstractRequestResponseUtil(ScriptPanel panel, AbstractMessageModifier modifier, IExtensionHelpers helpers, IHttpRequestResponse requestResponse) {
-        this.panel = panel;
-        this.modifier = modifier;
+    public AbstractRequestResponseUtil(LogCallback logCallback, IExtensionHelpers helpers, IHttpRequestResponse requestResponse) {
+        this.logCallback = logCallback;
         this.helpers = helpers;
         this.requestResponse = requestResponse;
     }
@@ -67,16 +63,20 @@ public abstract class AbstractRequestResponseUtil {
 
     public String requestHeader(String header) {
         List<String> requestHeader = requestHeaders(false);
-        return requestHeader.stream().filter(h->header.equalsIgnoreCase(h)).findFirst().orElse(null);
+        return requestHeader.stream().filter(header::equalsIgnoreCase).findFirst().orElse(null);
     }
 
     public List<String> requestHeaders(String header) {
         List<String> requestHeader = requestHeaders(false);
-        return requestHeader.stream().filter(h->header.equalsIgnoreCase(h)).collect(Collectors.toList());
+        return requestHeader.stream().filter(header::equalsIgnoreCase).collect(Collectors.toList());
     }
 
     public boolean hasRequestHeader(String header, String value) {
         List<String> headers = requestHeaders(false);
+        return hasHeaderWithValue(header, value, headers);
+    }
+
+    static protected boolean hasHeaderWithValue(String header, String value, List<String> headers) {
         String cur;
         for (int i = 1; i<headers.size(); i++) {
             cur = headers.get(i);
@@ -112,17 +112,6 @@ public abstract class AbstractRequestResponseUtil {
         return "";
     }
 
-    public void debug(String s) {
-        panel.printLn(s);
-    }
-
-    public void info(String s) {
-        panel.printLn(s);
-    }
-
-    public void error(String s) {
-        panel.printLn(s);
-    }
 
     protected void resetCache() {
         this.request = null;

@@ -1,10 +1,9 @@
-package fr.safepic.burp.js;
+package fr.safepic.burp.script.js;
 
 import burp.IExtensionHelpers;
 import burp.IHttpRequestResponse;
 import burp.IResponseInfo;
-import fr.safepic.burp.AbstractMessageModifier;
-import fr.safepic.burp.ui.ScriptPanel;
+import fr.safepic.burp.script.LogCallback;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,8 +17,8 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
     protected List<String> responseHeaders;
 
 
-    public ResponseRWUtil(ScriptPanel panel, AbstractMessageModifier modifier, IExtensionHelpers helpers, IHttpRequestResponse requestResponse) {
-        super(panel, modifier, helpers, requestResponse);
+    public ResponseRWUtil(LogCallback logCallback, IExtensionHelpers helpers, IHttpRequestResponse requestResponse) {
+        super(logCallback, helpers, requestResponse);
     }
 
     public byte[] responseBytes() {
@@ -63,25 +62,17 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
 
     public String responseHeader(String header) {
         List<String> responseHeaders = responseHeaders(false);
-        return responseHeaders.stream().filter(h->header.equalsIgnoreCase(h)).findFirst().orElse(null);
+        return responseHeaders.stream().filter(header::equalsIgnoreCase).findFirst().orElse(null);
     }
 
     public List<String> responseHeaders(String header) {
         List<String> responseHeaders = responseHeaders(false);
-        return responseHeaders.stream().filter(h->header.equalsIgnoreCase(h)).collect(Collectors.toList());
+        return responseHeaders.stream().filter(header::equalsIgnoreCase).collect(Collectors.toList());
     }
 
     public boolean hasResponseHeader(String header, String value) {
         List<String> headers = responseHeaders(false);
-        String cur;
-        for (int i = 1; i<headers.size(); i++) {
-            cur = headers.get(i);
-            int sep = cur.indexOf(':');
-            if (sep != -1 && cur.substring(0, sep).trim().equalsIgnoreCase(header)) {
-                return value == null || value.equals(cur.substring(sep+1).trim());
-            }
-        }
-        return false;
+        return hasHeaderWithValue(header, value, headers);
     }
 
     public void removeResponseHeader(String header) {
@@ -91,7 +82,7 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
             cur = headers.get(i);
             int sep = cur.indexOf(':');
             if (sep != -1 && cur.substring(0, sep).trim().equalsIgnoreCase(header)) {
-                debug("Response Header " + cur + " removed");
+                logCallback.trace("Response Header " + cur + " removed");
                 headers.remove(i);
                 i--;
             }
@@ -106,7 +97,7 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
             int sep = cur.indexOf(':');
             if (sep != -1 && cur.substring(0, sep).trim().equalsIgnoreCase(header)) {
                 headers.set(i, header+": "+value);
-                debug("Response Header " + cur + " replaced by" + header+": "+value);
+                logCallback.trace("Response Header " + cur + " replaced by" + header+": "+value);
             }
         }
     }
@@ -114,7 +105,7 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
     public void addResponseHeader(String header, String value) {
         List<String> headers = responseHeaders(true);
         headers.add(header+": "+value);
-        debug("Response Header " + header+": "+value + " added");
+        logCallback.trace("Response Header " + header+": "+value + " added");
     }
 
     private boolean isModified() {
@@ -131,7 +122,7 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
             this.responseBytes = null;
             this.initialResponseHeader = null;
             this.responseHeaders = null;
-            debug("Response updated");
+            logCallback.trace("Response updated");
         }
     }
 

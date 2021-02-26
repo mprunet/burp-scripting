@@ -1,10 +1,9 @@
-package fr.safepic.burp.js;
+package fr.safepic.burp.script.js;
 
 import burp.IExtensionHelpers;
 import burp.IHttpRequestResponse;
 import burp.IRequestInfo;
-import fr.safepic.burp.AbstractMessageModifier;
-import fr.safepic.burp.ui.ScriptPanel;
+import fr.safepic.burp.script.LogCallback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,8 +12,8 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
     private List<String> requestHeader;
 
 
-    public RequestRWUtil(ScriptPanel panel, AbstractMessageModifier modifier, IExtensionHelpers helpers, IHttpRequestResponse requestResponse) {
-        super(panel, modifier, helpers, requestResponse);
+    public RequestRWUtil(LogCallback logCallback, IExtensionHelpers helpers, IHttpRequestResponse requestResponse) {
+        super(logCallback, helpers, requestResponse);
     }
 
     @Override
@@ -40,7 +39,7 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
             cur = requestHeader.get(i);
             int sep = cur.indexOf(':');
             if (sep != -1 && cur.substring(0, sep).trim().equalsIgnoreCase(header)) {
-                debug("Request Header " + cur + " removed");
+                logCallback.trace("Request Header " + cur + " removed");
                 requestHeader.remove(i);
                 i--;
             }
@@ -55,7 +54,7 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
             int sep = cur.indexOf(':');
             if (sep != -1 && cur.substring(0, sep).trim().equalsIgnoreCase(header)) {
                 requestHeader.set(i, header+": "+value);
-                debug("Request Header " + cur + " replaced by" + header+": "+value);
+                logCallback.trace("Request Header " + cur + " replaced by" + header+": "+value);
             }
         }
     }
@@ -63,7 +62,7 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
     public void addRequestHeader(String header, String value) {
         requestHeaders(true);
         requestHeader.add(header+": "+value);
-        debug("Request Header " + header+": "+value + " added");
+        logCallback.trace("Request Header " + header+": "+value + " added");
     }
     public void url(String url) {
         List<String> headers  = requestHeaders();
@@ -83,7 +82,7 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
             url = oldUrl += "#" + href;
         }
         url(url);
-        debug("Request Url " + oldUrl + " replaced by " + url);
+        logCallback.trace("Request Url " + oldUrl + " replaced by " + url);
     }
 
     private boolean isModified() {
@@ -98,7 +97,7 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
             requestResponse().setRequest(helpers().buildHttpMessage(requestHeader, body));
             resetCache();
             this.requestHeader = null;
-            debug("Request updated");
+            logCallback.trace("Request updated");
         }
     }
 

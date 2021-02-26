@@ -1,4 +1,4 @@
-package fr.safepic.burp.ui.common;
+package fr.safepic.burp.script.ui.component;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -8,14 +8,11 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.util.prefs.Preferences;
 
-public class MyTextArea extends JPanel implements PreferenceFriendly {
-    private RSyntaxTextArea coloredArea = new FSRTextArea(15, 80);
-    private JTextArea  normalArea = new FSJTextArea(15, 80);
-    private RTextScrollPane coloredAreaSP = new RTextScrollPane(coloredArea);
-    private JScrollPane normalAreaSP = new JScrollPane(normalArea);
-    private CardLayout layout = new CardLayout();
+public class MyTextArea extends JPanel {
+    private final RSyntaxTextArea coloredArea = new FSRTextArea(15, 80);
+    private final JTextArea  normalArea = new FSJTextArea(15, 80);
+    private final CardLayout layout = new CardLayout();
     private boolean colored = true;
 
 
@@ -24,7 +21,9 @@ public class MyTextArea extends JPanel implements PreferenceFriendly {
         setName(name);
         setLayout(layout);
         coloredArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT);
+        RTextScrollPane coloredAreaSP = new RTextScrollPane(coloredArea);
         add(coloredAreaSP, "colored");
+        JScrollPane normalAreaSP = new JScrollPane(normalArea);
         add(normalAreaSP, "normal");
         layout.show(this, "colored");
 
@@ -37,7 +36,7 @@ public class MyTextArea extends JPanel implements PreferenceFriendly {
 
 
     private class ScriptDocumentListener implements DocumentListener {
-        private boolean fireWhenColored;
+        private final boolean fireWhenColored;
         ScriptDocumentListener(boolean fireWhenColored){
             this.fireWhenColored = fireWhenColored;
         }
@@ -89,24 +88,5 @@ public class MyTextArea extends JPanel implements PreferenceFriendly {
             normalArea.setText(txt);
         }
     }
-
-    public void save(Preferences prefs, Container component) {
-        String name = getName();
-        prefs.put(name, getText());
-    }
-
-    public void load(Preferences prefs, Container component) {
-        String name = getName();
-        setText(prefs.get(name, getText()));
-    }
-
-    public void setEnable(boolean e) {
-        if (e) {
-            normalArea.setEnabled(false);
-            coloredArea.setEnabled(false);
-            coloredArea.setBackground(getBackground());
-        }
-    }
-
 
 }

@@ -1,7 +1,7 @@
-package fr.safepic.burp.ui.scripts;
+package fr.safepic.burp.script.ui.model;
 
 import burp.IBurpExtenderCallbacks;
-import fr.safepic.burp.ui.Script2Panel;
+import fr.safepic.burp.script.ui.panel.ScriptPanel;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -13,7 +13,7 @@ public class ScriptRef {
     private boolean enabled;
     private boolean inScope = true;
     private int tools = IBurpExtenderCallbacks.TOOL_PROXY;
-    private transient Script2Panel panel;
+    private transient ScriptPanel panel;
     private String name;
     private String description;
     private String scriptRequest;
@@ -23,11 +23,6 @@ public class ScriptRef {
 
     public ScriptRef() {
 
-    }
-    public ScriptRef(boolean enabled, String name, String description) {
-        this.enabled = enabled;
-        this.name = name;
-        this.description = description;
     }
 
     public ScriptRef getBackup() {
@@ -65,11 +60,11 @@ public class ScriptRef {
         this.enabled = enabled;
     }
 
-    public Script2Panel getPanel() {
+    public ScriptPanel getPanel() {
         return panel;
     }
 
-    public void setPanel(Script2Panel panel) {
+    public void setPanel(ScriptPanel panel) {
         this.panel = panel;
     }
 
@@ -130,8 +125,7 @@ public class ScriptRef {
         if (!Objects.equals(backup.getName(), getName())) return true;
         if (!Objects.equals(backup.getDescription(), getDescription())) return true;
         if (!Objects.equals(backup.getScriptRequest(), getScriptRequest())) return true;
-        if (!Objects.equals(backup.getScriptResponse(), getScriptResponse())) return true;
-        return false;
+        return !Objects.equals(backup.getScriptResponse(), getScriptResponse());
     }
 
 
@@ -168,10 +162,6 @@ public class ScriptRef {
 
     public boolean isSavedGlobally() {
         return savedGlobally;
-    }
-
-    public void setUid(String uid) {
-        this.uid = uid;
     }
 
 

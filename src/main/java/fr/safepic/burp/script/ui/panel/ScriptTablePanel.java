@@ -1,40 +1,57 @@
-package fr.safepic.burp.ui;
+package fr.safepic.burp.script.ui.panel;
 
-import fr.safepic.burp.ui.common.CloseTabIcon;
-import fr.safepic.burp.ui.common.CloseableTabbedPane;
-import fr.safepic.burp.ui.common.NewTabIcon;
-import fr.safepic.burp.ui.scripts.ScriptRef;
-import fr.safepic.burp.ui.scripts.ScriptTableModel;
+import fr.safepic.burp.script.PreferenceClass;
+import fr.safepic.burp.script.ui.component.CloseTabIcon;
+import fr.safepic.burp.script.ui.component.CloseableTabbedPane;
+import fr.safepic.burp.script.ui.model.ScriptRef;
+import fr.safepic.burp.script.ui.model.ScriptTableModel;
 
 import javax.swing.*;
-import javax.swing.table.TableCellRenderer;
+import javax.swing.event.ChangeEvent;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
 
-public class ScriptListPanel extends JPanel {
+public class ScriptTablePanel extends JPanel {
     private JTable table;
     private ScriptTableModel tm;
-    List<ScriptRef> data = new ArrayList<>();
-    private CloseableTabbedPane tabbedPane = new CloseableTabbedPane("Scripts", this, this::addTab);
+    private final List<ScriptRef> data = new ArrayList<>();
+    private final CloseableTabbedPane tabbedPane = new CloseableTabbedPane("Scripts", this, this::addTab);
+    private final Timer timer;
 
 
-    public ScriptListPanel() {
+    public ScriptTablePanel() {
         setName("Scripts");
-        this.tabbedPane = tabbedPane;
         init();
+        //tabbedPane.addChangeListener(this::tabChange);
+        timer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                oldSelectedIndex = tabbedPane.getSelectedIndex();
+                Component c = tabbedPane.getComponentAt(oldSelectedIndex);
+                if (c instanceof JScrollPane) {
+                    c = ((JScrollPane)c).getViewport().getView();
+                    if (c instanceof ScriptPanel) {
+                        ((ScriptPanel) c).refreshLog();
+                    }
+                }
+            }
+        });
+        timer.setInitialDelay(5000);
+        timer.start();
     }
 
     public Void addTab() {
-        ScriptRef sr = fakeData("New script","");
+        ScriptRef sr = fakeData("New script " + data.size());
         data.add(sr);
-        SwingUtilities.invokeLater(()->{
-            tm.fireTableDataChanged();
-        });
+        SwingUtilities.invokeLater(()-> tm.fireTableDataChanged());
         addTab(sr);
         return null;
     }
@@ -43,36 +60,30 @@ public class ScriptListPanel extends JPanel {
         return tabbedPane;
     }
 
-    private ScriptRef fakeData(String name, String description) {
+    private ScriptRef fakeData(String name) {
 
         ScriptRef scriptRef = new ScriptRef();
         scriptRef.setName(name);
-        scriptRef.setDescription(description);
+        scriptRef.setDescription("");
         scriptRef.setScriptRequest("/* Variables exposed \n" +
                 "helper : instance of burp.IExtensionHelpers\n" +
                 "requestResponse : instance of burp.IHttpRequestResponse\n" +
-                "log : a logger helper\n" +
-                "log.debug('Bonjour');\n" +
-                "//log.error('Bonjour');\n" +
-                "tools : see help\n" +
-                "tools.removeRequestHeader('Connection');\n" +
-                "tools.setRequestHeader('User-Agent', 'xxx');\n" +
-                "tools.addRequestHeader('Connection', 'Close'\n" +
-                "tools.url('/auth/login#favicon.ico');\n" +
-                "tools.url()\n" +
+                "debug('Bonjour');\n" +
+                "removeRequestHeader('Connection');\n" +
+                "setRequestHeader('User-Agent', 'xxx');\n" +
+                "addRequestHeader('Connection', 'Close'\n" +
+                "url('/auth/login#favicon.ico');\n" +
+                "url()\n" +
                 "*/\n");
         scriptRef.setScriptResponse("/* Variables exposed \n" +
                 "helper : instance of burp.IExtensionHelpers\n" +
                 "requestResponse : instance of burp.IHttpRequestResponse\n" +
-                "log : a logger helper\n" +
-                "log.debug('Bonjour');\n" +
-                "//log.error('Bonjour');\n" +
-                "tools : see help\n" +
-                "tools.removeResponseHeader('Cache');\n" +
-                "tools.setRequestHeader('User-Agent', 'xxx');\n" +
-                "tools.addRequestHeader('Connection', 'Close'\n" +
-                "tools.url('/auth/login#favicon.ico');\n" +
-                "tools.url()\n" +
+                "debug('Bonjour');\n" +
+                "removeResponseHeader('Cache');\n" +
+                "setRequestHeader('User-Agent', 'xxx');\n" +
+                "addRequestHeader('Connection', 'Close'\n" +
+                "url('/auth/login#favicon.ico');\n" +
+                "url()\n" +
                 "*/\n");
         return scriptRef;
     }
@@ -80,9 +91,6 @@ public class ScriptListPanel extends JPanel {
     public void init() {
         setLayout(new BorderLayout());
         loadData();
-/*
-        data.add(fakeData("avoid cache", "Remove cache"));
-        data.add(fakeData("useragent", "Change useragent value"));*/
 
         tm = new ScriptTableModel(data);
         table = new JTable(tm);
@@ -92,9 +100,6 @@ public class ScriptListPanel extends JPanel {
             }
         }
         add(new JScrollPane(table), BorderLayout.CENTER);
-        /*ListSelectionModel listModel = table.getSelectionModel();
-        listModel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        listModel.addListSelectionListener(this);*/
         table.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent me) {
                 Point p = me.getPoint();
@@ -108,26 +113,40 @@ public class ScriptListPanel extends JPanel {
         });
     }
 
+    private int oldSelectedIndex = 0;
+
+    /*public void tabChange(ChangeEvent event) {
+        Component c = tabbedPane.getComponentAt(oldSelectedIndex);
+        if (c instanceof JScrollPane) {
+            c = ((JScrollPane)c).getViewport().getView();
+            if (c instanceof ScriptPanel) {
+                ((ScriptPanel) c).componentHidden(null);
+            }
+        }
+        oldSelectedIndex = tabbedPane.getSelectedIndex();
+        c = tabbedPane.getComponentAt(oldSelectedIndex);
+        if (c instanceof JScrollPane) {
+            c = ((JScrollPane)c).getViewport().getView();
+            if (c instanceof ScriptPanel) {
+                ((ScriptPanel) c).componentShown(null);
+            }
+        }
+    }*/
+
     private void addTab(ScriptRef sr) {
         SwingUtilities.invokeLater(()-> {
             if (sr.getPanel() == null) {
                 if (!sr.needsSave()) {
                     sr.backup();
                 }
-                Script2Panel scriptPanel = new Script2Panel(sr, ScriptListPanel.this::onChange);
+                ScriptPanel scriptPanel = new ScriptPanel(sr, ScriptTablePanel.this::onChange);
                 sr.setPanel(scriptPanel);
                 tabbedPane.addTab(sr.getName(), new CloseTabIcon(), scriptPanel.getScrollPane(), null, () -> {
                     SwingUtilities.invokeLater(() -> {
-                        boolean close = true;
-/*                        if (sr.needsSave()) {
-                            close = JOptionPane.showConfirmDialog(scriptPanel, "Do you want to close the tab without saving the changes ?", "Confirmation", JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION;
-                        }*/
-                        if (close) {
-                            int idx = tabbedPane.indexOfComponent(scriptPanel.getScrollPane());
-                            sr.setPanel(null);
-                            tabbedPane.removeTabAt(idx);
-                            tabbedPane.setSelectedIndex(0);
-                        }
+                        int idx = tabbedPane.indexOfComponent(scriptPanel.getScrollPane());
+                        sr.setPanel(null);
+                        tabbedPane.removeTabAt(idx);
+                        tabbedPane.setSelectedIndex(0);
                     });
                     return null;
                 });
@@ -147,8 +166,8 @@ public class ScriptListPanel extends JPanel {
         }
     }
 
-    public void onChange(ScriptRef ref, Script2Panel.Action action) {
-        if (action == Script2Panel.Action.UPDATE) {
+    public void onChange(ScriptRef ref, ScriptPanel.Action action) {
+        if (action == ScriptPanel.Action.UPDATE) {
             SwingUtilities.invokeLater(()-> {
                 tm.fireDataChanged(ref);
                 JPanel panel = ref.getPanel();
@@ -157,16 +176,14 @@ public class ScriptListPanel extends JPanel {
                     tabbedPane.setTitleAt(idx, ref.getName());
                 }
             });
-        } else if (action == Script2Panel.Action.SAVE) {
+        } else if (action == ScriptPanel.Action.SAVE) {
             try {
                 ref.saveData(getNode());
                 ref.backup();
-                SwingUtilities.invokeLater(()->{
-                    tm.fireDataChanged(ref);
-                });
+                SwingUtilities.invokeLater(()-> tm.fireDataChanged(ref));
             } catch (BackingStoreException ignore) {
             }
-        } else if (action == Script2Panel.Action.DELETE) {
+        } else if (action == ScriptPanel.Action.DELETE) {
             Preferences node = getNode();
             try {
                 if (node.nodeExists(ref.getUid())) {
@@ -177,26 +194,16 @@ public class ScriptListPanel extends JPanel {
             }
             if (data.contains(ref)) {
                 data.remove(ref);
-                SwingUtilities.invokeLater(()->{
-                    tm.fireTableDataChanged();
-                });
+                SwingUtilities.invokeLater(()-> tm.fireTableDataChanged());
             }
         }
     }
 
     private Preferences getNode() {
-        return Preferences.userNodeForPackage(ScriptListPanel.class).node(ScriptListPanel.class.getName());
+        return Preferences.userNodeForPackage(PreferenceClass.class);
     }
-/*
-    public void valueChanged(ListSelectionEvent e) {
-        int[] sel;
-        Object value;
-        if (!e.getValueIsAdjusting())
-        {
-            sel = table.getSelectedRows();
-            if (sel.length > 0) {
-                System.out.println("Value selected " + tm.getValueAt(sel[0]).getName());
-            }
-        }
-    }}*/
+
+    public List<ScriptRef> getActiveScriptRef() {
+        return data.stream().filter(ScriptRef::isEnabled).collect(Collectors.toList());
+    }
 }

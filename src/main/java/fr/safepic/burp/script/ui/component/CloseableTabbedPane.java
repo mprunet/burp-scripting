@@ -1,4 +1,4 @@
-package fr.safepic.burp.ui.common;
+package fr.safepic.burp.script.ui.component;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class CloseableTabbedPane extends JTabbedPane implements MouseListener {
-    Map<Component, Supplier<Void>> iconCallback = Collections.synchronizedMap(new HashMap<>());
-    Supplier<Void> addListener;
+    final Map<Component, Supplier<Void>> iconCallback = Collections.synchronizedMap(new HashMap<>());
+    final Supplier<Void> addListener;
 
     /**
      * Creates a new instance of ClosableTabbedPane
@@ -56,7 +56,7 @@ public class CloseableTabbedPane extends JTabbedPane implements MouseListener {
     /**
      * Appends a tab with or without closing-capabilities, depending on the flag isClosable. If isClosable is true, a
      * close-icon ('X') is displayed left of the title. If extraIcon is not null, it will be displayed between the closing
-     * icon (if present) and the tab's title. The extraIcon will be displayed indepently of the closing-icon.
+     * icon (if present) and the tab's title. The extraIcon will be displayed independently of the closing-icon.
      *
      * @param title Title of this tab.
      * @param component Contents of this tab.
@@ -92,7 +92,7 @@ public class CloseableTabbedPane extends JTabbedPane implements MouseListener {
             icon = getDisabledIconAt(tabIndex);
         }
 
-        if ((icon == null) || !(icon instanceof ClickableTabIcon)) {
+        if (!(icon instanceof ClickableTabIcon)) {
             // This tab is not intended to be closeable.
             return;
         }

@@ -1,4 +1,4 @@
-package fr.safepic.burp.ui.common;
+package fr.safepic.burp.script.ui.component;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,10 +12,5 @@ public class FSJTextArea extends JTextArea {
 
     public void setFont(Font font) {
         super.setFont(new Font("monospaced", Font.PLAIN, 16));
-/*        if (font.getSize() != 16f) {
-            font = font.deriveFont(16f);
-        }
-        super.setFont(font);*/
-
     }
 }
