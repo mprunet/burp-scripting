@@ -1,0 +1,1 @@
+updateResponseHeader('Set-Cookie', 'My value');

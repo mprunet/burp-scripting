@@ -82,7 +82,7 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
             cur = headers.get(i);
             int sep = cur.indexOf(':');
             if (sep != -1 && cur.substring(0, sep).trim().equalsIgnoreCase(header)) {
-                logCallback.trace("Response Header " + cur + " removed");
+                logCallback.verbose("Response Header " + cur + " removed");
                 headers.remove(i);
                 i--;
             }
@@ -91,13 +91,32 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
 
     public void setResponseHeader(String header, String value) {
         List<String> headers = responseHeaders(true);
+        boolean set = false;
         String cur;
         for (int i = 1; i<headers.size(); i++) {
             cur = headers.get(i);
             int sep = cur.indexOf(':');
             if (sep != -1 && cur.substring(0, sep).trim().equalsIgnoreCase(header)) {
                 headers.set(i, header+": "+value);
-                logCallback.trace("Response Header " + cur + " replaced by" + header+": "+value);
+                logCallback.verbose("Response Header " + cur + " replaced by" + header+": "+value);
+                set = true;
+                break;
+            }
+        }
+        if (!set) {
+            addResponseHeader(header, value);
+        }
+    }
+
+    public void updateResponseHeader(String header, String value) {
+        List<String> headers = responseHeaders(true);
+        String cur;
+        for (int i = 1; i<headers.size(); i++) {
+            cur = headers.get(i);
+            int sep = cur.indexOf(':');
+            if (sep != -1 && cur.substring(0, sep).trim().equalsIgnoreCase(header)) {
+                headers.set(i, header+": "+value);
+                logCallback.verbose("Response Header " + cur + " replaced by" + header+": "+value);
             }
         }
     }
@@ -105,7 +124,7 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
     public void addResponseHeader(String header, String value) {
         List<String> headers = responseHeaders(true);
         headers.add(header+": "+value);
-        logCallback.trace("Response Header " + header+": "+value + " added");
+        logCallback.verbose("Response Header " + header+": "+value + " added");
     }
 
     private boolean isModified() {
@@ -122,7 +141,7 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
             this.responseBytes = null;
             this.initialResponseHeader = null;
             this.responseHeaders = null;
-            logCallback.trace("Response updated");
+            logCallback.verbose("Response updated");
         }
     }
 

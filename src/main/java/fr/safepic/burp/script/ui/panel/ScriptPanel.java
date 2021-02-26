@@ -47,7 +47,7 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
     private final JButton btnRevert = new JButton("Revert");
     private final JButton btnDelete = new JButton("Delete");
     private final JButton btnSave = new JButton("Save");
-    private final JComboBox<String> logLevel = new JComboBox<>(new String[]{"NONE", "ERROR","INFO", "DEBUG", "TRACE"});
+    private final JComboBox<String> logLevel = new JComboBox<>(new String[]{"NONE", "ERROR","INFO", "DEBUG", "VERBOSE"});
 
     public enum Action {
         UPDATE,

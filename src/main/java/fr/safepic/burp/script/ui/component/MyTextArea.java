@@ -8,6 +8,16 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.util.*;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 
 public class MyTextArea extends JPanel {
     private final RSyntaxTextArea coloredArea = new FSRTextArea(15, 80);
@@ -29,6 +39,88 @@ public class MyTextArea extends JPanel {
 
         normalArea.getDocument().addDocumentListener(new ScriptDocumentListener(false));
         coloredArea.getDocument().addDocumentListener(new ScriptDocumentListener(true));
+        JPopupMenu menu = coloredArea.getPopupMenu();
+        JMenu sample = new JMenu("Code sample");
+        try {
+            URI uri = MyTextArea.class.getResource("/sample-menu-item").toURI();
+            if ("jar".equals(uri.getScheme())) {
+                try {
+                    FileSystems.getFileSystem(uri);
+                } catch( FileSystemNotFoundException e ) {
+                    Map<String, String> env = new HashMap<>();
+                    env.put("create", "true");
+                    FileSystems.newFileSystem(uri, env);
+                }
+            }
+            Path myPath = Paths.get(uri);
+            Stack<JMenu> stack = new Stack<>();
+            stack.push(sample);
+            List<Path> paths = new ArrayList<>();
+
+            Files.walkFileTree(myPath, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    if (!myPath.equals(dir)) {
+                        JMenu parent = stack.peek();
+                        JMenu child = new JMenu(dir.getFileName().toString());
+                        parent.add(child);
+                        stack.push(child);
+                    }
+                    return super.preVisitDirectory(dir, attrs);
+                }
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    paths.add(file);
+                    return super.visitFile(file, attrs);
+                }
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                    return super.visitFileFailed(file, exc);
+                }
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    paths.stream().sorted(Comparator.comparing(file->file.getFileName().toString()))
+                            .forEach(file->{
+                                String value = file.getFileName().toString();
+                                value = value.substring(0, value.length() - 4);
+
+                                stack.peek().add(new JMenuItem(new AbstractAction(value) {
+                                    @Override
+                                    public void actionPerformed(ActionEvent e) {
+                                        insertSample(file);
+                                    }
+                                }));
+                            });
+                    paths.clear();
+                    if (!myPath.equals(dir)) {
+                        stack.pop();
+                    }
+                    return super.postVisitDirectory(dir, exc);
+                }
+            });
+/*            Stream<Path> walk = Files.walk(myPath, 2);
+            Map<Path, JMenu> menus = new
+            walk.forEach(path -> {
+                System.out.println(myPath.relativize(path));
+            });*/
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        menu.add(sample);
+
+
+    }
+
+    public void insertSample(Path path) {
+        try {
+            if (colored) {
+                coloredArea.insert(Files.readString(path, StandardCharsets.UTF_8), coloredArea.getCaretPosition());
+            } else {
+                normalArea.insert(Files.readString(path, StandardCharsets.UTF_8), normalArea.getCaretPosition());
+            }
+        }catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
     public void addDocumentListener(DocumentListener listener) {
         listenerList.add(DocumentListener.class, listener);

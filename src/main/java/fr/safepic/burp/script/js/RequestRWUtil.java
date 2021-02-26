@@ -32,6 +32,10 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
     }
 
 
+    /**
+     * Remove all requests header having the provided name
+     * @param header: name of the header
+     */
     public void removeRequestHeader(String header) {
         requestHeaders(true);
         String cur;
@@ -39,14 +43,46 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
             cur = requestHeader.get(i);
             int sep = cur.indexOf(':');
             if (sep != -1 && cur.substring(0, sep).trim().equalsIgnoreCase(header)) {
-                logCallback.trace("Request Header " + cur + " removed");
+                logCallback.verbose("Request Header " + cur + " removed");
                 requestHeader.remove(i);
                 i--;
             }
         }
     }
 
+    /**
+     * Set the value of the first request header if exists
+     * If the header does not exists add a new one
+     * @param header: the header's name
+     * @param value: the header's value
+     */
     public void setRequestHeader(String header, String value) {
+        requestHeaders(true);
+        String cur;
+        boolean set = false;
+        for (int i = 1; i<requestHeader.size(); i++) {
+            cur = requestHeader.get(i);
+            int sep = cur.indexOf(':');
+            if (sep != -1 && cur.substring(0, sep).trim().equalsIgnoreCase(header)) {
+                requestHeader.set(i, header+": "+value);
+                logCallback.verbose("Request Header " + cur + " replaced by" + header+": "+value);
+                set = true;
+                break;
+            }
+        }
+        if (!set) {
+            addRequestHeader(header, value);
+        }
+    }
+
+
+        /**
+         * Set the value of all requests header having the provided name
+         * If the header does not exists does nothing
+         * @param header: the header's name
+         * @param value: the header's value
+         */
+    public void updateRequestHeader(String header, String value) {
         requestHeaders(true);
         String cur;
         for (int i = 1; i<requestHeader.size(); i++) {
@@ -54,16 +90,26 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
             int sep = cur.indexOf(':');
             if (sep != -1 && cur.substring(0, sep).trim().equalsIgnoreCase(header)) {
                 requestHeader.set(i, header+": "+value);
-                logCallback.trace("Request Header " + cur + " replaced by" + header+": "+value);
+                logCallback.verbose("Request Header " + cur + " replaced by" + header+": "+value);
             }
         }
     }
 
+    /**
+     * Add a request header with the provided name
+     * If the header does not exists does nothing
+     * @param header: the header's name
+     * @param value: the header's value
+     */
     public void addRequestHeader(String header, String value) {
         requestHeaders(true);
         requestHeader.add(header+": "+value);
-        logCallback.trace("Request Header " + header+": "+value + " added");
+        logCallback.verbose("Request Header " + header+": "+value + " added");
     }
+    /**
+     * Set the URL of the request (first line)
+     * @param url: the url value
+     */
     public void url(String url) {
         List<String> headers  = requestHeaders();
         String oldUrl = headers.get(0);
@@ -72,6 +118,10 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
         headers.set(0, oldUrl.substring(0, begin+1) + url + oldUrl.substring(end));
     }
 
+    /**
+     * Set a href in the URL
+     * @param href: the href value
+     */
     public void href(String href) {
         String oldUrl = url();
         int idxHRef = oldUrl.indexOf("#");
@@ -82,13 +132,16 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
             url = oldUrl += "#" + href;
         }
         url(url);
-        logCallback.trace("Request Url " + oldUrl + " replaced by " + url);
+        logCallback.verbose("Request Url " + oldUrl + " replaced by " + url);
     }
 
     private boolean isModified() {
         return requestHeader != null && !requestHeader.equals(initialRequestHeader());
     }
 
+    /**
+     * Save the request, usefull in case of mixing Burp native method and helper method.
+     */
     public void commit() {
         if (isModified()) {
             IRequestInfo ri = request();
@@ -97,7 +150,7 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
             requestResponse().setRequest(helpers().buildHttpMessage(requestHeader, body));
             resetCache();
             this.requestHeader = null;
-            logCallback.trace("Request updated");
+            logCallback.verbose("Request updated");
         }
     }
 

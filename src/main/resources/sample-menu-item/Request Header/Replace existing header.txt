@@ -1,0 +1,1 @@
+updateRequestHeader('Cookie', 'My value');

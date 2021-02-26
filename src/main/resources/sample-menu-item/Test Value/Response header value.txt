@@ -1,0 +1,3 @@
+if (hasResponseHeader('Connection', 'Close')) {
+// Your code goes here
+}

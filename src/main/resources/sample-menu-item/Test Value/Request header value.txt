@@ -1,0 +1,4 @@
+if (hasRequestHeader('Connection', 'Close')) {
+// Your code goes here
+}
+

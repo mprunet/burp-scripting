@@ -1,0 +1,2 @@
+// headerValue is an array
+var headerValue = responsetHeaders('Set-Cookie');

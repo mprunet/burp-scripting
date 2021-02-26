@@ -110,9 +110,9 @@ public class LogCallback {
     }
 
 
-    public void trace(String s) {
+    public void verbose(String s) {
         if (level>=4) {
-            messageList.add(new Message(false, "TRACE : " + s));
+            messageList.add(new Message(false, "VERBOSE : " + s));
         }
     }
 
