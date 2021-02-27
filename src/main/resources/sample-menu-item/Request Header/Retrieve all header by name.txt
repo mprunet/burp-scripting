@@ -1,2 +1,2 @@
 // headerValue is an array
-var headerValue = requestHeaders('Cookie');
+var headerValue = getRequestHeaders('Cookie');

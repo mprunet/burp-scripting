@@ -65,25 +65,15 @@ public class ScriptTablePanel extends JPanel {
         ScriptRef scriptRef = new ScriptRef();
         scriptRef.setName(name);
         scriptRef.setDescription("");
-        scriptRef.setScriptRequest("/* Variables exposed \n" +
+        scriptRef.setScriptRequest("/* Variables exposed :\n" +
                 "helper : instance of burp.IExtensionHelpers\n" +
                 "requestResponse : instance of burp.IHttpRequestResponse\n" +
-                "debug('Bonjour');\n" +
-                "removeRequestHeader('Connection');\n" +
-                "setRequestHeader('User-Agent', 'xxx');\n" +
-                "addRequestHeader('Connection', 'Close'\n" +
-                "url('/auth/login#favicon.ico');\n" +
-                "url()\n" +
+                "Right click to see code sample\n"+
                 "*/\n");
-        scriptRef.setScriptResponse("/* Variables exposed \n" +
-                "helper : instance of burp.IExtensionHelpers\n" +
-                "requestResponse : instance of burp.IHttpRequestResponse\n" +
-                "debug('Bonjour');\n" +
-                "removeResponseHeader('Cache');\n" +
-                "setRequestHeader('User-Agent', 'xxx');\n" +
-                "addRequestHeader('Connection', 'Close'\n" +
-                "url('/auth/login#favicon.ico');\n" +
-                "url()\n" +
+        scriptRef.setScriptResponse("/* Variables exposed :\n" +
+                        "helper : instance of burp.IExtensionHelpers\n" +
+                        "requestResponse : instance of burp.IHttpRequestResponse\n" +
+                        "Right click to see code sample\n"+
                 "*/\n");
         return scriptRef;
     }
@@ -205,5 +195,9 @@ public class ScriptTablePanel extends JPanel {
 
     public List<ScriptRef> getActiveScriptRef() {
         return data.stream().filter(ScriptRef::isEnabled).collect(Collectors.toList());
+    }
+
+    public void notifyScriptDisabled(ScriptRef ref) {
+        SwingUtilities.invokeLater(()-> tm.fireDataChanged(ref));
     }
 }

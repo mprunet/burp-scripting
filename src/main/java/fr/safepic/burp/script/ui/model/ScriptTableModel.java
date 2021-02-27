@@ -28,10 +28,12 @@ public class ScriptTableModel extends AbstractTableModel implements TableCellRen
             case 0:
                 return "Enabled";
             case 1:
-                return "Name";
+                return "Scope Only";
             case 2:
-                return "Description";
+                return "Name";
             case 3:
+                return "Description";
+            case 4:
                 return "State";
             default:
                 return null;
@@ -45,17 +47,18 @@ public class ScriptTableModel extends AbstractTableModel implements TableCellRen
 
     @Override
     public int getColumnCount() {
-        return 4;
+        return 5;
     }
 
     @Override
     public Class<?> getColumnClass(int columnIndex) {
         switch (columnIndex) {
             case 0:
-                return Boolean.class;
             case 1:
+                return Boolean.class;
             case 2:
             case 3:
+            case 4:
                 return String.class;
             default:
                 return null;
@@ -75,15 +78,9 @@ public class ScriptTableModel extends AbstractTableModel implements TableCellRen
         switch (columnIndex) {
             case 0:
                 ref.setEnabled((Boolean)aValue);
-                break;
-            case 1:
-                ref.setName((String)aValue);
-                break;
-            case 2:
-                ref.setDescription((String)aValue);
-                break;
-            case 3:
-                //ref.setLocal((Boolean)aValue);
+                if (Boolean.TRUE.equals(aValue)) {
+                    ref.setScriptError(false);
+                }
                 break;
         }
         if (ref.getPanel() != null) {
@@ -100,12 +97,14 @@ public class ScriptTableModel extends AbstractTableModel implements TableCellRen
         ScriptRef ref = scripts.get(rowIndex);
         switch (columnIndex) {
             case 0:
-                return ref.isEnabled();
+                return ref.isEnabled() && !ref.isScriptError();
             case 1:
-                return ref.getName();
+                return ref.isInScope();
             case 2:
-                return ref.getDescription();
+                return ref.getName();
             case 3:
+                return ref.getDescription();
+            case 4:
                 boolean savedGlobally = ref.isSavedGlobally();
                 return savedGlobally ? (ref.needsSave()  ? "Changes will be lost" : "Saved") : "Not saved";
 

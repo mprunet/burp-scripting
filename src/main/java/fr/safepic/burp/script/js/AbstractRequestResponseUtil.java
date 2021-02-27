@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public abstract class AbstractRequestResponseUtil {
-    protected final LogCallback logCallback;
+
+    protected LogCallback logCallback;
     private final IExtensionHelpers helpers;
     private final IHttpRequestResponse requestResponse;
     private IRequestInfo request;
@@ -18,8 +19,7 @@ public abstract class AbstractRequestResponseUtil {
     private List<String> initialRequestHeader;
 
 
-    public AbstractRequestResponseUtil(LogCallback logCallback, IExtensionHelpers helpers, IHttpRequestResponse requestResponse) {
-        this.logCallback = logCallback;
+    public AbstractRequestResponseUtil(IExtensionHelpers helpers, IHttpRequestResponse requestResponse) {
         this.helpers = helpers;
         this.requestResponse = requestResponse;
     }
@@ -57,16 +57,17 @@ public abstract class AbstractRequestResponseUtil {
     }
 
 
-    public List<String> requestHeaders() {
+    public List<String> getAllRequestHeaders() {
         return requestHeaders(true);
     }
 
-    public String requestHeader(String header) {
+    public String getRequestHeader(String header) {
         List<String> requestHeader = requestHeaders(false);
         return requestHeader.stream().filter(header::equalsIgnoreCase).findFirst().orElse(null);
+
     }
 
-    public List<String> requestHeaders(String header) {
+    public List<String> getRequestHeaders(String header) {
         List<String> requestHeader = requestHeaders(false);
         return requestHeader.stream().filter(header::equalsIgnoreCase).collect(Collectors.toList());
     }
@@ -90,7 +91,7 @@ public abstract class AbstractRequestResponseUtil {
 
 
 
-    public String url() {
+    public String getUrl() {
         List<String> headers = requestHeaders(false);
         String url = headers.get(0).trim();
         int begin = url.indexOf(' ');
@@ -103,8 +104,8 @@ public abstract class AbstractRequestResponseUtil {
         }
     }
 
-    public String href() {
-        String url = url();
+    public String getHref() {
+        String url = getUrl();
         int idxHRef = url.indexOf("#");
         if (idxHRef != -1) {
             return url.substring(idxHRef+1);
@@ -117,6 +118,10 @@ public abstract class AbstractRequestResponseUtil {
         this.request = null;
         this.requestBytes = null;
         this.initialRequestHeader = null;
+    }
+
+    public void setLogCallback(LogCallback logCallback) {
+        this.logCallback = logCallback;
     }
 
     abstract public void commit();

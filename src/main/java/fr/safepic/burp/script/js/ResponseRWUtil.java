@@ -17,8 +17,8 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
     protected List<String> responseHeaders;
 
 
-    public ResponseRWUtil(LogCallback logCallback, IExtensionHelpers helpers, IHttpRequestResponse requestResponse) {
-        super(logCallback, helpers, requestResponse);
+    public ResponseRWUtil(IExtensionHelpers helpers, IHttpRequestResponse requestResponse) {
+        super(helpers, requestResponse);
     }
 
     public byte[] responseBytes() {
@@ -56,16 +56,16 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
     }
 
 
-    public List<String> responseHeaders() {
-        return responseHeaders(true);
+    public List<String> getAllResponseHeaders() {
+        return responseHeaders(false);
     }
 
-    public String responseHeader(String header) {
+    public String getResponseHeader(String header) {
         List<String> responseHeaders = responseHeaders(false);
         return responseHeaders.stream().filter(header::equalsIgnoreCase).findFirst().orElse(null);
     }
 
-    public List<String> responseHeaders(String header) {
+    public List<String> getResponseHeaders(String header) {
         List<String> responseHeaders = responseHeaders(false);
         return responseHeaders.stream().filter(header::equalsIgnoreCase).collect(Collectors.toList());
     }

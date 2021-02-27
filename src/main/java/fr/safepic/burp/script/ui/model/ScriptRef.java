@@ -11,6 +11,7 @@ import java.util.prefs.Preferences;
 public class ScriptRef {
     private String uid = UUID.randomUUID().toString();
     private boolean enabled;
+    private volatile boolean scriptError;
     private boolean inScope = true;
     private int tools = IBurpExtenderCallbacks.TOOL_PROXY;
     private transient ScriptPanel panel;
@@ -134,6 +135,7 @@ public class ScriptRef {
         Preferences node = pref.node(uid);
         node.putInt("version", 1);
         node.putBoolean("enabled", enabled);
+        node.putBoolean("inScope", inScope);
         node.putInt("tools", tools);
         node.put("name", name);
         node.put("description", description);
@@ -147,6 +149,7 @@ public class ScriptRef {
         ScriptRef ref = new ScriptRef();
         ref.uid = node.name();
         ref.enabled = node.getBoolean("enabled", false);
+        ref.inScope = node.getBoolean("inScope", true);
         ref.tools = node.getInt("tools", 0);
         ref.name = node.get("name", node.name());
         ref.description = node.get("description", "");
@@ -164,6 +167,13 @@ public class ScriptRef {
         return savedGlobally;
     }
 
+    public boolean isScriptError() {
+        return scriptError;
+    }
+
+    public void setScriptError(boolean scriptError) {
+        this.scriptError = scriptError;
+    }
 
 /*
         private boolean local;

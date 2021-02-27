@@ -1,1 +1,1 @@
-var headerValue = requestHeader('Cookie');
+var headerValue = getRequestHeader('Cookie');

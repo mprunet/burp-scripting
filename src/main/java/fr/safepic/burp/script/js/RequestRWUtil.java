@@ -12,8 +12,8 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
     private List<String> requestHeader;
 
 
-    public RequestRWUtil(LogCallback logCallback, IExtensionHelpers helpers, IHttpRequestResponse requestResponse) {
-        super(logCallback, helpers, requestResponse);
+    public RequestRWUtil(IExtensionHelpers helpers, IHttpRequestResponse requestResponse) {
+        super(helpers, requestResponse);
     }
 
     @Override
@@ -110,8 +110,8 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
      * Set the URL of the request (first line)
      * @param url: the url value
      */
-    public void url(String url) {
-        List<String> headers  = requestHeaders();
+    public void setUrl(String url) {
+        List<String> headers  = requestHeaders(true);
         String oldUrl = headers.get(0);
         int begin = oldUrl.indexOf(' ');
         int end = oldUrl.lastIndexOf(' ');
@@ -122,8 +122,8 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
      * Set a href in the URL
      * @param href: the href value
      */
-    public void href(String href) {
-        String oldUrl = url();
+    public void setHref(String href) {
+        String oldUrl = getUrl();
         int idxHRef = oldUrl.indexOf("#");
         String url;
         if (idxHRef != -1) {
@@ -131,7 +131,7 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
         } else {
             url = oldUrl += "#" + href;
         }
-        url(url);
+        setUrl(url);
         logCallback.verbose("Request Url " + oldUrl + " replaced by " + url);
     }
 

@@ -7,6 +7,7 @@ import fr.safepic.burp.script.js.ResponseRWUtil;
 import fr.safepic.burp.script.ui.panel.ScriptTablePanel;
 import fr.safepic.burp.script.ui.model.ScriptRef;
 import org.mozilla.javascript.Context;
+import org.mozilla.javascript.EcmaError;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -36,7 +37,7 @@ public class ScriptModifier implements IHttpListener, IProxyListener {
     }
     @Override
     public void processProxyMessage(boolean request, IInterceptedProxyMessage iInterceptedProxyMessage) {
-        callScript(request, iInterceptedProxyMessage::getMessageInfo);
+        callScript(TOOL_PROXY, request, iInterceptedProxyMessage::getMessageInfo);
     }
 
 
@@ -45,7 +46,7 @@ public class ScriptModifier implements IHttpListener, IProxyListener {
         if (tools == TOOL_PROXY) {
             return;
         }
-        callScript(request, ()->requestResponse);
+        callScript(tools, request, ()->requestResponse);
     }
 
 
@@ -99,29 +100,36 @@ public class ScriptModifier implements IHttpListener, IProxyListener {
         return sb;
     }
 
-    private void callScript(boolean request, Supplier<IHttpRequestResponse> supplierRequestResponse) {
+    private void callScript(int burpTools, boolean request, Supplier<IHttpRequestResponse> supplierRequestResponse) {
         IHttpRequestResponse requestResponse = null;
+        AbstractRequestResponseUtil tools = null;
         for (ScriptRef scriptRef : panel.getActiveScriptRef()) {
             if (requestResponse == null) {
                 requestResponse = supplierRequestResponse.get();
+                if (request) {
+                    tools = new RequestRWUtil(helpers, requestResponse);
+                } else {
+                    tools = new ResponseRWUtil(helpers, requestResponse);
+                }
             }
+            if ((scriptRef.getTools() & burpTools) == 0
+               || scriptRef.isScriptError()
+               || scriptRef.isInScope() && !callbacks.isInScope(tools.request().getUrl())) {
+                continue;
+            }
+
+
             // Create and enter a Context. A Context stores information about the execution environment of a script.
             LogCallback logCallback = new LogCallback(scriptRef.getPanel(), stdout, stderr);
+            tools.setLogCallback(logCallback);
             Context cx = Context.enter();
             try {
                 String scriptContent = request ? scriptRef.getScriptRequest() : scriptRef.getScriptResponse();
                 if (scriptContent.trim().length() == 0) {
                     continue;
                 }
-                AbstractRequestResponseUtil tools;
-                StringBuilder script;
-                if (request) {
-                    tools = new RequestRWUtil(logCallback, helpers, requestResponse);
-                    script = newRequestScript();
-                } else {
-                    tools = new ResponseRWUtil(logCallback, helpers, requestResponse);
-                    script = newResponseScript();
-                }
+                StringBuilder script = request ? newRequestScript() : newResponseScript();
+
                 Scriptable scope = cx.initStandardObjects();
                 // Pass the Stock Java object to the JavaScript context
                 Object wrappedRequestResponse = Context.javaToJS(requestResponse, scope);
@@ -136,8 +144,12 @@ public class ScriptModifier implements IHttpListener, IProxyListener {
                 // Execute the script
                 cx.evaluateString(scope, script.toString(), "EvaluationScript", 1, null);
                 tools.commit();
-            } catch (Exception e) {
+            } catch (Throwable e) {
+                scriptRef.setScriptError(true);
                 logCallback.exception(e);
+                callbacks.issueAlert("Compilation error in script " + scriptRef.getName() + ", script disabled, fix it to reactivate execution");
+                logCallback.error("Compilation error, script disabled, you must fix the error");
+                panel.notifyScriptDisabled(scriptRef);
             } finally {
                 logCallback.flush();
                 // Exit the Context. This removes the association between the Context and the current thread and is an

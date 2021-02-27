@@ -138,6 +138,7 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
             if (updateObject) {
                 scriptRef.setName(tfName.getText());
                 scriptRef.setDescription(tfDesc.getText());
+                scriptRef.setScriptError(false);
                 scriptRef.setScriptResponse(responseScript.getText());
                 scriptRef.setScriptRequest(requestScript.getText());
                 scriptRefChangeConsumer.accept(scriptRef, Action.UPDATE);
@@ -192,9 +193,13 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
         setValues();
         enabled.addItemListener(e->{
             scriptRef.setEnabled(enabled.isSelected());
-            SwingUtilities.invokeLater(()-> scriptRefChangeConsumer.accept(scriptRef, Action.UPDATE));
+            scriptRef.setScriptError(false);
+            scriptRefChangeConsumer.accept(scriptRef, Action.UPDATE);
         });
-        cbScope.addItemListener(e-> scriptRef.setInScope(cbScope.isSelected()));
+        cbScope.addItemListener(e-> {
+            scriptRef.setInScope(cbScope.isSelected());
+            scriptRefChangeConsumer.accept(scriptRef, Action.UPDATE);
+        });
         cbProxy.addItemListener(e->changeTools(IBurpExtenderCallbacks.TOOL_PROXY, cbProxy.isSelected()));
         cbSpider.addItemListener(e->changeTools(IBurpExtenderCallbacks.TOOL_SPIDER, cbSpider.isSelected()));
         cbScanner.addItemListener(e->changeTools(IBurpExtenderCallbacks.TOOL_SCANNER, cbScanner.isSelected()));
