@@ -8,6 +8,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.util.LinkedList;
@@ -240,6 +241,19 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
                 scriptRefChangeConsumer.accept(scriptRef, Action.DELETE);
             }
         }));
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem clear = new JMenuItem(new AbstractAction("Clear content") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                synchronized (contentQueue) {
+                    contentQueue.clear();
+                    contentQueueModified = true;
+                }
+                refreshLog();
+            }
+        });
+        popupMenu.add(clear);
+        errorPane.setComponentPopupMenu(popupMenu);
     }
 
     private int addTextFieldWithLabel(int maxColumn, int line, JLabel labelName, JTextField tfName) {
