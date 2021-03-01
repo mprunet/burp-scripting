@@ -106,9 +106,9 @@ public class ScriptModifier implements IHttpListener, IProxyListener {
             if (requestResponse == null) {
                 requestResponse = supplierRequestResponse.get();
                 if (request) {
-                    tools = new RequestRWUtil(helpers, requestResponse);
+                    tools = new RequestRWUtil(callbacks, requestResponse);
                 } else {
-                    tools = new ResponseRWUtil(helpers, requestResponse);
+                    tools = new ResponseRWUtil(callbacks, requestResponse);
                 }
             }
             if ((scriptRef.getTools() & burpTools) == 0

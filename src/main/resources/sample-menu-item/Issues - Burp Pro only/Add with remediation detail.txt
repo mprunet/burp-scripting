@@ -1,0 +1,1 @@
+addIssue('My issue').remediation("Remediation detail", "Remediation background");

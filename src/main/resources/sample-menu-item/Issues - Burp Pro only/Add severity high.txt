@@ -1,0 +1,1 @@
+addIssue('My issue').high();

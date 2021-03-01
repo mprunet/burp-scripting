@@ -150,7 +150,7 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
         if (enabled) {
             tools = scriptRef.getTools() | tools;
         } else {
-            tools = scriptRef.getTools() & tools;
+            tools = scriptRef.getTools() & (tools ^ 0xFFFFFFFF);
         }
         scriptRef.setTools(tools);
         SwingUtilities.invokeLater(()-> scriptRefChangeConsumer.accept(scriptRef, Action.UPDATE));

@@ -1,5 +1,6 @@
 package fr.safepic.burp.script.js;
 
+import burp.IBurpExtenderCallbacks;
 import burp.IExtensionHelpers;
 import burp.IHttpRequestResponse;
 import burp.IRequestInfo;
@@ -11,8 +12,8 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
     private List<String> requestHeader;
 
 
-    public RequestRWUtil(IExtensionHelpers helpers, IHttpRequestResponse requestResponse) {
-        super(helpers, requestResponse);
+    public RequestRWUtil(IBurpExtenderCallbacks callbacks, IHttpRequestResponse requestResponse) {
+        super(callbacks, requestResponse);
     }
 
     @Override
@@ -142,6 +143,7 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
      * Save the request, useful in case of mixing Burp native method and helper method.
      */
     public void commit() {
+        super.commit();
         if (isModified()) {
             IRequestInfo ri = request();
             byte[] body = new byte[requestBytes().length - ri.getBodyOffset()];

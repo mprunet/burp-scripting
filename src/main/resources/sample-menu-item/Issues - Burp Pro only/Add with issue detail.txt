@@ -1,0 +1,1 @@
+addIssue('My issue').issue("Issue detail", "Issue background");

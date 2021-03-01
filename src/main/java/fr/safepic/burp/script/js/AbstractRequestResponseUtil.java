@@ -1,10 +1,12 @@
 package fr.safepic.burp.script.js;
 
+import burp.IBurpExtenderCallbacks;
 import burp.IExtensionHelpers;
 import burp.IHttpRequestResponse;
 import burp.IRequestInfo;
 import fr.safepic.burp.script.LogCallback;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,15 +14,18 @@ import java.util.stream.Collectors;
 public abstract class AbstractRequestResponseUtil {
 
     protected LogCallback logCallback;
+    private final IBurpExtenderCallbacks callbacks;
     private final IExtensionHelpers helpers;
     private final IHttpRequestResponse requestResponse;
     private IRequestInfo request;
     private byte[] requestBytes;
     private List<String> initialRequestHeader;
+    private List<IssueObj> issues = new ArrayList<>();
 
 
-    public AbstractRequestResponseUtil(IExtensionHelpers helpers, IHttpRequestResponse requestResponse) {
-        this.helpers = helpers;
+    public AbstractRequestResponseUtil(IBurpExtenderCallbacks callbacks, IHttpRequestResponse requestResponse) {
+        this.callbacks = callbacks;
+        this.helpers = callbacks.getHelpers();
         this.requestResponse = requestResponse;
     }
 
@@ -124,6 +129,22 @@ public abstract class AbstractRequestResponseUtil {
         this.logCallback = logCallback;
     }
 
-    abstract public void commit();
+    public IssueObj addIssue(String name) {
+
+        IssueObj issueObj = new IssueObj(
+                request().getUrl(),
+                name,
+                new IHttpRequestResponse[]{requestResponse},
+                requestResponse.getHttpService()
+        );
+        issues.add(issueObj);
+        return issueObj;
+    }
+
+    public void commit() {
+        for (IssueObj issueObj : issues) {
+            callbacks.addScanIssue(issueObj);
+        }
+    }
 
 }

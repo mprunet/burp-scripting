@@ -1,5 +1,6 @@
 package fr.safepic.burp.script.js;
 
+import burp.IBurpExtenderCallbacks;
 import burp.IExtensionHelpers;
 import burp.IHttpRequestResponse;
 import burp.IResponseInfo;
@@ -16,8 +17,8 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
     protected List<String> responseHeaders;
 
 
-    public ResponseRWUtil(IExtensionHelpers helpers, IHttpRequestResponse requestResponse) {
-        super(helpers, requestResponse);
+    public ResponseRWUtil(IBurpExtenderCallbacks callbacks, IHttpRequestResponse requestResponse) {
+        super(callbacks, requestResponse);
     }
 
     public byte[] responseBytes() {
@@ -131,6 +132,7 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
     }
 
     public void commit() {
+        super.commit();
         if (isModified()) {
             IResponseInfo ri = response();
             byte[] body = new byte[responseBytes.length - ri.getBodyOffset()];
