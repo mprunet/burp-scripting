@@ -7,7 +7,6 @@ import fr.safepic.burp.script.js.ResponseRWUtil;
 import fr.safepic.burp.script.ui.panel.ScriptTablePanel;
 import fr.safepic.burp.script.ui.model.ScriptRef;
 import org.mozilla.javascript.Context;
-import org.mozilla.javascript.EcmaError;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 

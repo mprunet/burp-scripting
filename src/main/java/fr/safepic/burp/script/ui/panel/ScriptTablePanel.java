@@ -7,7 +7,6 @@ import fr.safepic.burp.script.ui.model.ScriptRef;
 import fr.safepic.burp.script.ui.model.ScriptTableModel;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -31,16 +30,13 @@ public class ScriptTablePanel extends JPanel {
         setName("Scripts");
         init();
         //tabbedPane.addChangeListener(this::tabChange);
-        timer = new Timer(1000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                oldSelectedIndex = tabbedPane.getSelectedIndex();
-                Component c = tabbedPane.getComponentAt(oldSelectedIndex);
-                if (c instanceof JScrollPane) {
-                    c = ((JScrollPane)c).getViewport().getView();
-                    if (c instanceof ScriptPanel) {
-                        ((ScriptPanel) c).refreshLog();
-                    }
+        timer = new Timer(1000, e -> {
+            oldSelectedIndex = tabbedPane.getSelectedIndex();
+            Component c = tabbedPane.getComponentAt(oldSelectedIndex);
+            if (c instanceof JScrollPane) {
+                c = ((JScrollPane)c).getViewport().getView();
+                if (c instanceof ScriptPanel) {
+                    ((ScriptPanel) c).refreshLog();
                 }
             }
         });

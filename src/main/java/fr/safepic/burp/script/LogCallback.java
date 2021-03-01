@@ -15,17 +15,19 @@ public class LogCallback {
     private final int level;
 
     private static class Message {
-        boolean error;
-        String message;
-        Throwable exception;
+        final boolean error;
+        final String message;
+        final Throwable exception;
 
         public Message(Throwable exception) {
             this.error = true;
+            this.message = null;
             this.exception = exception;
         }
         public Message(boolean error, String message) {
             this.error = error;
             this.message = message;
+            this.exception = null;
         }
     }
 

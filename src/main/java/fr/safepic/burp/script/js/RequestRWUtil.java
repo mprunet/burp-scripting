@@ -139,7 +139,7 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
     }
 
     /**
-     * Save the request, usefull in case of mixing Burp native method and helper method.
+     * Save the request, useful in case of mixing Burp native method and helper method.
      */
     public void commit() {
         if (isModified()) {

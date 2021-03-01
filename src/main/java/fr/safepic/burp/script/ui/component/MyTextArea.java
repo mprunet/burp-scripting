@@ -15,9 +15,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 public class MyTextArea extends JPanel {
     private final RSyntaxTextArea coloredArea = new FSRTextArea(15, 80);
@@ -25,7 +23,7 @@ public class MyTextArea extends JPanel {
     private final CardLayout layout = new CardLayout();
     private boolean colored = true;
 
-    private class MenuEntry {
+    private static class MenuEntry {
         JPopupMenu popup;
         JMenu menu;
 
@@ -84,7 +82,7 @@ public class MyTextArea extends JPanel {
             Stack<MenuEntry> stack = new Stack<>();
 
             List<Path> paths = new ArrayList<>();
-            SimpleFileVisitor visitor = new SimpleFileVisitor<Path>() {
+            SimpleFileVisitor<Path> visitor = new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                     if (!myPath.equals(dir)) {

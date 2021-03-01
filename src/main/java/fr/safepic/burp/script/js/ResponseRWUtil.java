@@ -3,7 +3,6 @@ package fr.safepic.burp.script.js;
 import burp.IExtensionHelpers;
 import burp.IHttpRequestResponse;
 import burp.IResponseInfo;
-import fr.safepic.burp.script.LogCallback;
 
 import java.util.ArrayList;
 import java.util.Collections;
