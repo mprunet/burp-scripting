@@ -139,6 +139,10 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
         return requestHeader != null && !requestHeader.equals(initialRequestHeader());
     }
 
+    public void setTarget(boolean https, String hostname, int port) {
+        requestResponse().setHttpService(new HttpServiceObj(https, hostname, port));
+    }
+
     /**
      * Save the request, useful in case of mixing Burp native method and helper method.
      */
