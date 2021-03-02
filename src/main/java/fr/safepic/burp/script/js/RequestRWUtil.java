@@ -4,16 +4,20 @@ import burp.IBurpExtenderCallbacks;
 import burp.IExtensionHelpers;
 import burp.IHttpRequestResponse;
 import burp.IRequestInfo;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.NativeJSON;
+import org.mozilla.javascript.json.JsonParser;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class RequestRWUtil extends AbstractRequestResponseUtil {
     private List<String> requestHeader;
+    private boolean requestBodyModifed = false;
 
 
-    public RequestRWUtil(IBurpExtenderCallbacks callbacks, IHttpRequestResponse requestResponse) {
-        super(callbacks, requestResponse);
+    public RequestRWUtil(IBurpExtenderCallbacks callbacks, IHttpRequestResponse requestResponse, JavascriptContext context) {
+        super(callbacks, requestResponse, context);
     }
 
     @Override
@@ -135,13 +139,35 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
         logCallback.verbose("Request Url " + oldUrl + " replaced by " + url);
     }
 
-    private boolean isModified() {
-        return requestHeader != null && !requestHeader.equals(initialRequestHeader());
-    }
-
     public void setTarget(boolean https, String hostname, int port) {
         requestResponse().setHttpService(new HttpServiceObj(https, hostname, port));
     }
+
+    public void setRequestBody(byte[] requestBody) {
+        this.requestBody = requestBody;
+        requestBodyModifed = true;
+    }
+
+    public void setRequestBodyAsString(String body) {
+        setRequestBody(body.getBytes());
+    }
+
+    public void setRequestBodyAsJson(Object json) {
+        Object jsonStringify = NativeJSON.stringify(context.getCx(), context.getScope(), json, null, null);
+        setRequestBodyAsString((String)Context.jsToJava(jsonStringify,String.class));
+    }
+
+    public Object getRequestBodyAsJson(String encoding) throws JsonParser.ParseException {
+        String value = getRequestBodyAsString(encoding);
+        JsonParser jsonParser = new JsonParser(context.getCx(), context.getScope());
+        return jsonParser.parseValue(value);
+    }
+
+
+    private boolean isModified() {
+        return requestBodyModifed || (requestHeader != null && !requestHeader.equals(initialRequestHeader()));
+    }
+
 
     /**
      * Save the request, useful in case of mixing Burp native method and helper method.
@@ -149,12 +175,11 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
     public void commit() {
         super.commit();
         if (isModified()) {
-            IRequestInfo ri = request();
-            byte[] body = new byte[requestBytes().length - ri.getBodyOffset()];
-            System.arraycopy(requestBytes(), ri.getBodyOffset(), body, 0, body.length);
-            requestResponse().setRequest(helpers().buildHttpMessage(requestHeader, body));
+            requestResponse().setRequest(helpers().buildHttpMessage(requestHeaders(false), getRequestBody()));
             resetCache();
             this.requestHeader = null;
+            this.requestBody = null;
+            this.requestBodyModifed = false;
             logCallback.verbose("Request updated");
         }
     }

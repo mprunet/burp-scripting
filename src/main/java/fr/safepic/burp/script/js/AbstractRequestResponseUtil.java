@@ -5,10 +5,14 @@ import burp.IExtensionHelpers;
 import burp.IHttpRequestResponse;
 import burp.IRequestInfo;
 import fr.safepic.burp.script.LogCallback;
+import org.mozilla.javascript.json.JsonParser;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public abstract class AbstractRequestResponseUtil {
@@ -19,14 +23,17 @@ public abstract class AbstractRequestResponseUtil {
     private final IHttpRequestResponse requestResponse;
     private IRequestInfo request;
     private byte[] requestBytes;
+    protected byte[] requestBody;
     private List<String> initialRequestHeader;
     private List<IssueObj> issues = new ArrayList<>();
+    protected final JavascriptContext context;
 
 
-    public AbstractRequestResponseUtil(IBurpExtenderCallbacks callbacks, IHttpRequestResponse requestResponse) {
+    public AbstractRequestResponseUtil(IBurpExtenderCallbacks callbacks, IHttpRequestResponse requestResponse, JavascriptContext context) {
         this.callbacks = callbacks;
         this.helpers = callbacks.getHelpers();
         this.requestResponse = requestResponse;
+        this.context = context;
     }
 
     protected IExtensionHelpers helpers() {
@@ -139,6 +146,49 @@ public abstract class AbstractRequestResponseUtil {
         );
         issues.add(issueObj);
         return issueObj;
+    }
+    protected String decodeBody(byte[] body, String encoding, Supplier<String> contentType) {
+        if ("undefined".equals(encoding)) {
+            String type = contentType.get();
+            if (type == null) {
+                logCallback.error("Encoding not specified use ISO-8859-1");
+                encoding = "ISO-8859-1";
+            } else {
+                int idxCharset = type.indexOf("charset");
+                if (idxCharset != -1) {
+                    encoding = type.substring(idxCharset + 8).split(" ;")[0];
+                } else {
+                    logCallback.error("Encoding not specified use ISO-8859-1");
+                    encoding = "ISO-8859-1";
+                }
+            }
+        }
+        try {
+            return new String(body, encoding);
+        } catch (UnsupportedEncodingException e) {
+            logCallback.error("Encoding not supported "+ encoding + " fallback to ISO-8859-1");
+            return new String(requestBytes(), StandardCharsets.ISO_8859_1);
+        }
+
+    }
+
+    public byte[] getRequestBody() {
+        if (requestBody == null) {
+            IRequestInfo ri = request();
+            requestBody = new byte[requestBytes().length - ri.getBodyOffset()];
+            System.arraycopy(requestBytes(), ri.getBodyOffset(), requestBody, 0, requestBody.length);
+        }
+        return requestBody;
+    }
+
+    public String getRequestBodyAsString(String encoding) {
+        return decodeBody(getRequestBody(), encoding, ()->getRequestHeader("Content-Type"));
+    }
+
+    public Object getRequestBodyAsJson(String encoding) throws JsonParser.ParseException {
+        String value = getRequestBodyAsString(encoding);
+        JsonParser jsonParser = new JsonParser(context.getCx(), context.getScope());
+        return jsonParser.parseValue(value);
     }
 
     public void commit() {

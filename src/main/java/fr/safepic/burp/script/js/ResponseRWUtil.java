@@ -1,9 +1,9 @@
 package fr.safepic.burp.script.js;
 
-import burp.IBurpExtenderCallbacks;
-import burp.IExtensionHelpers;
-import burp.IHttpRequestResponse;
-import burp.IResponseInfo;
+import burp.*;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.NativeJSON;
+import org.mozilla.javascript.json.JsonParser;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,10 +15,12 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
     protected byte[] responseBytes;
     protected List<String> initialResponseHeader;
     protected List<String> responseHeaders;
+    protected byte[] responseBody;
+    private boolean responseBodyModified = false;
 
 
-    public ResponseRWUtil(IBurpExtenderCallbacks callbacks, IHttpRequestResponse requestResponse) {
-        super(callbacks, requestResponse);
+    public ResponseRWUtil(IBurpExtenderCallbacks callbacks, IHttpRequestResponse requestResponse, JavascriptContext context) {
+        super(callbacks, requestResponse, context);
     }
 
     public byte[] responseBytes() {
@@ -127,21 +129,56 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
         logCallback.verbose("Response Header " + header+": "+value + " added");
     }
 
-    private boolean isModified() {
-        return responseHeaders != null && !responseHeaders.equals(initialResponseHeader);
+    public byte[] getResponseBody() {
+        if (responseBody == null) {
+            byte[] responseBytes = responseBytes();
+            IResponseInfo ri = response();
+            responseBody = new byte[responseBytes.length - ri.getBodyOffset()];
+            System.arraycopy(responseBytes, ri.getBodyOffset(), responseBody, 0, responseBody.length);
+        }
+        return responseBody;
     }
+
+    public String getResponseBodyAsString(String encoding) {
+        return decodeBody(getResponseBody(), encoding, ()->getRequestHeader("Content-Type"));
+    }
+
+    public Object getResponseBodyAsJson(String encoding) throws JsonParser.ParseException {
+        String value = getResponseBodyAsString(encoding);
+        JsonParser jsonParser = new JsonParser(context.getCx(), context.getScope());
+        return jsonParser.parseValue(value);
+    }
+
+    public void setResponseBody(byte[] responseBody) {
+        this.responseBody = responseBody;
+        responseBodyModified = true;
+    }
+
+    public void setResponseBodyAsString(String body) {
+        setResponseBody(body.getBytes());
+    }
+
+    public void setResponseBodyAsJson(String json) {
+        Object jsonStringify = NativeJSON.stringify(context.getCx(), context.getScope(), json, null, null);
+        setResponseBodyAsString((String)Context.jsToJava(jsonStringify,String.class));
+    }
+
+
+    private boolean isModified() {
+        return responseBodyModified || (responseHeaders != null && !responseHeaders.equals(initialResponseHeader));
+    }
+
 
     public void commit() {
         super.commit();
         if (isModified()) {
-            IResponseInfo ri = response();
-            byte[] body = new byte[responseBytes.length - ri.getBodyOffset()];
-            System.arraycopy(responseBytes, ri.getBodyOffset(), body, 0, body.length);
-            requestResponse().setRequest(helpers().buildHttpMessage(responseHeaders, body));
+            requestResponse().setRequest(helpers().buildHttpMessage(responseHeaders, getResponseBody()));
             this.response = null;
             this.responseBytes = null;
             this.initialResponseHeader = null;
             this.responseHeaders = null;
+            this.responseBody = null;
+            this.responseBodyModified = false;
             logCallback.verbose("Response updated");
         }
     }

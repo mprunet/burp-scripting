@@ -2,6 +2,7 @@ package fr.safepic.burp.script;
 
 import burp.*;
 import fr.safepic.burp.script.js.AbstractRequestResponseUtil;
+import fr.safepic.burp.script.js.JavascriptContext;
 import fr.safepic.burp.script.js.RequestRWUtil;
 import fr.safepic.burp.script.js.ResponseRWUtil;
 import fr.safepic.burp.script.ui.panel.ScriptTablePanel;
@@ -103,12 +104,13 @@ public class ScriptModifier implements IHttpListener, IProxyListener {
         IHttpRequestResponse requestResponse = null;
         AbstractRequestResponseUtil tools = null;
         for (ScriptRef scriptRef : panel.getActiveScriptRef()) {
+            JavascriptContext context = new JavascriptContext();
             if (requestResponse == null) {
                 requestResponse = supplierRequestResponse.get();
                 if (request) {
-                    tools = new RequestRWUtil(callbacks, requestResponse);
+                    tools = new RequestRWUtil(callbacks, requestResponse, context);
                 } else {
-                    tools = new ResponseRWUtil(callbacks, requestResponse);
+                    tools = new ResponseRWUtil(callbacks, requestResponse, context);
                 }
             }
             if ((scriptRef.getTools() & burpTools) == 0
@@ -141,7 +143,9 @@ public class ScriptModifier implements IHttpListener, IProxyListener {
                 ScriptableObject.putProperty(scope, "log", wrappedLog);
                 script.append(scriptContent);
                 // Execute the script
-                cx.evaluateString(scope, script.toString(), "EvaluationScript", 1, null);
+                context.setCx(cx);
+                context.setScope(scope);
+                cx.evaluateString(scope, script.toString(), scriptRef.getName(), 1, null);
                 tools.commit();
             } catch (Throwable e) {
                 scriptRef.setScriptError(true);

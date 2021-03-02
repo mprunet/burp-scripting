@@ -1,0 +1,10 @@
+/*
+Body:
+{
+   "data": "mydata"
+}
+
+*/
+json = getRequestBodyAsJson('UTF-8');
+json.data = "new data";
+setRequestBodyAsJson(json);
