@@ -116,12 +116,12 @@ public abstract class AbstractRequestResponseUtil {
 
 
     public String getUrl() {
+        
         List<String> headers = requestHeaders(false);
         String url = headers.get(0).trim();
         int begin = url.indexOf(' ');
         int end = url.lastIndexOf(' ');
-        if (begin != -1 && end != -1 && (url.substring(end + 1).equalsIgnoreCase("HTTP/1.1")
-                || url.substring(end + 1).equalsIgnoreCase("HTTP/1.0"))) {
+        if (begin != -1 && end != -1 && url.substring(end + 1).startsWith("HTTP/")) {
             return url.substring(begin + 1, end);
         } else {
             return null;
