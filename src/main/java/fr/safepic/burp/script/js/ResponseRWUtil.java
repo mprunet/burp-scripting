@@ -64,12 +64,12 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
 
     public String getResponseHeader(String header) {
         List<String> responseHeaders = responseHeaders(false);
-        return responseHeaders.stream().filter(header::equalsIgnoreCase).findFirst().orElse(null);
+        return filterHeaderGetValue(responseHeaders, header).findFirst().orElse(null);
     }
 
     public List<String> getResponseHeaders(String header) {
         List<String> responseHeaders = responseHeaders(false);
-        return responseHeaders.stream().filter(header::equalsIgnoreCase).collect(Collectors.toList());
+        return filterHeaderGetValue(responseHeaders, header).collect(Collectors.toList());
     }
 
     public boolean hasResponseHeader(String header, String value) {
@@ -158,7 +158,7 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
         setResponseBody(body.getBytes());
     }
 
-    public void setResponseBodyAsJson(String json) {
+    public void setResponseBodyAsJson(Object json) {
         Object jsonStringify = NativeJSON.stringify(context.getCx(), context.getScope(), json, null, null);
         setResponseBodyAsString((String)Context.jsToJava(jsonStringify,String.class));
     }
@@ -172,7 +172,7 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
     public void commit() {
         super.commit();
         if (isModified()) {
-            requestResponse().setRequest(helpers().buildHttpMessage(responseHeaders, getResponseBody()));
+            requestResponse().setResponse(helpers().buildHttpMessage(responseHeaders(false), getResponseBody()));
             this.response = null;
             this.responseBytes = null;
             this.initialResponseHeader = null;

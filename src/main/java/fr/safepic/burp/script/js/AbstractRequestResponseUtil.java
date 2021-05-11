@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class AbstractRequestResponseUtil {
 
@@ -73,15 +74,26 @@ public abstract class AbstractRequestResponseUtil {
         return requestHeaders(true);
     }
 
+    protected Stream<String> filterHeaderGetValue(List<String> headers, String header) {
+        return headers.stream()
+                .filter(cur->{
+                    int sep = cur.indexOf(':');
+                    return (sep != -1 && cur.substring(0, sep).trim().equalsIgnoreCase(header))
+                            && (header == null || header.equals(cur.substring(sep+1).trim()));
+                })
+                .map(cur->cur.substring(cur.indexOf(':')+1).trim());
+    }
+
+
     public String getRequestHeader(String header) {
         List<String> requestHeader = requestHeaders(false);
-        return requestHeader.stream().filter(header::equalsIgnoreCase).findFirst().orElse(null);
+        return filterHeaderGetValue(requestHeader, header).findFirst().orElse(null);
 
     }
 
     public List<String> getRequestHeaders(String header) {
         List<String> requestHeader = requestHeaders(false);
-        return requestHeader.stream().filter(header::equalsIgnoreCase).collect(Collectors.toList());
+        return filterHeaderGetValue(requestHeader, header).collect(Collectors.toList());
     }
 
     public boolean hasRequestHeader(String header, String value) {
