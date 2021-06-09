@@ -209,4 +209,20 @@ public abstract class AbstractRequestResponseUtil {
         }
     }
 
+    public void setComment(String comment) {
+        this.requestResponse().setComment(comment);
+    }
+
+    public String getComment() {
+        return this.requestResponse().getComment();
+    }
+
+    public void setColor(String color) {
+        this.requestResponse().setHighlight(color);
+    }
+
+    public String getColor() {
+        return this.requestResponse().getHighlight();
+    }
+
 }

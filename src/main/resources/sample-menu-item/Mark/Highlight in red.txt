@@ -1,0 +1,2 @@
+/*red, orange, yellow, green, cyan, blue, pink, magenta, gray*/
+setColor('red');
