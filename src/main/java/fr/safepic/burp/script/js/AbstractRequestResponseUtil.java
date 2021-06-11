@@ -78,8 +78,7 @@ public abstract class AbstractRequestResponseUtil {
         return headers.stream()
                 .filter(cur->{
                     int sep = cur.indexOf(':');
-                    return (sep != -1 && cur.substring(0, sep).trim().equalsIgnoreCase(header))
-                            && (header == null || header.equals(cur.substring(sep+1).trim()));
+                    return (sep != -1 && cur.substring(0, sep).trim().equalsIgnoreCase(header));
                 })
                 .map(cur->cur.substring(cur.indexOf(':')+1).trim());
     }

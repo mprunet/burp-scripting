@@ -29,8 +29,10 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
     private final JCheckBox cbSequencer = new JCheckBox("Sequencer");
     private final JLabel labelName = new JLabel("Name: ");
     private final JTextField tfName = new JTextField(20);
-    private final JLabel labelDesc = new JLabel("Description: ");
-    private final JTextField tfDesc = new JTextField(20);
+/*    private final JLabel labelDesc = new JLabel("Description: ");
+    private final JTextField tfDesc = new JTextField(20);*/
+    private final JCheckBox cbSessionHandling = new JCheckBox("Session Handling Script");
+
     private final JCheckBox color = new JCheckBox("Disable syntax coloration (bugfix when plugin is reloaded)");
     private final MyTextArea requestScript = new MyTextArea("request");
     private final MyTextArea responseScript = new MyTextArea("response");
@@ -70,7 +72,8 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
             updateObject=false;
             enabled.setSelected(scriptRef.isEnabled());
             tfName.setText(scriptRef.getName());
-            tfDesc.setText(scriptRef.getDescription());
+//            tfDesc.setText(scriptRef.getDescription());
+
             requestScript.setText(scriptRef.getScriptRequest());
             responseScript.setText(scriptRef.getScriptResponse());
             cbScope.setSelected(scriptRef.isInScope());
@@ -80,6 +83,13 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
             cbIntruder.setSelected((scriptRef.getTools() & IBurpExtenderCallbacks.TOOL_INTRUDER) != 0);
             cbRepeater.setSelected((scriptRef.getTools() & IBurpExtenderCallbacks.TOOL_REPEATER) != 0);
             cbSequencer.setSelected((scriptRef.getTools() & IBurpExtenderCallbacks.TOOL_SEQUENCER) != 0);
+            cbSessionHandling.setSelected(scriptRef.isSessionHandling());
+            cbIntruder.setEnabled(!scriptRef.isSessionHandling());
+            cbProxy.setEnabled(!scriptRef.isSessionHandling());
+            cbRepeater.setEnabled(!scriptRef.isSessionHandling());
+            cbScanner.setEnabled(!scriptRef.isSessionHandling());
+            cbSequencer.setEnabled(!scriptRef.isSessionHandling());
+            cbSpider.setEnabled(!scriptRef.isSessionHandling());
         } finally {
             updateObject=true;
         }
@@ -138,10 +148,11 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
         public void update() {
             if (updateObject) {
                 scriptRef.setName(tfName.getText());
-                scriptRef.setDescription(tfDesc.getText());
+//                scriptRef.setDescription(tfDesc.getText());
                 scriptRef.setScriptError(false);
                 scriptRef.setScriptResponse(responseScript.getText());
                 scriptRef.setScriptRequest(requestScript.getText());
+                scriptRef.setSessionHandling(cbSessionHandling.isSelected());
                 scriptRefChangeConsumer.accept(scriptRef, Action.UPDATE);
             }
         }
@@ -180,7 +191,9 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
                 , LINE_START, NONE, new Insets(2, 2, 2, 2), 5, 5));
         addComponent(line, 1, cbProxy, cbSpider, cbScanner, cbIntruder, cbRepeater, cbSequencer);
         line = addTextFieldWithLabel(maxColumn, line, labelName, tfName);
-        line = addTextFieldWithLabel(maxColumn, line, labelDesc, tfDesc);
+        add(cbSessionHandling, new GridBagConstraints(0, ++line, maxColumn, 1, 0.0, 0.0
+                , LINE_START, NONE, new Insets(2, 2, 2, 2), 5, 5));
+//        line = addTextFieldWithLabel(maxColumn, line, labelDesc, tfDesc);
         add(color, new GridBagConstraints(0, ++line, maxColumn, 1, 0.0, 0.0
                 , LINE_START, NONE, new Insets(2, 2, 2, 2), 5, 5));
         requestScript.setBorder(BorderFactory.createTitledBorder("Request script"));
@@ -201,6 +214,32 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
             scriptRef.setInScope(cbScope.isSelected());
             scriptRefChangeConsumer.accept(scriptRef, Action.UPDATE);
         });
+        cbSessionHandling.addItemListener(e-> {
+            scriptRef.setSessionHandling(cbSessionHandling.isSelected());
+            SwingUtilities.invokeLater(()->{
+                responseScript.setVisible(!cbSessionHandling.isSelected());
+                if (!cbSessionHandling.isSelected()) {
+                    hSplitPane.setResizeWeight(0.5);
+                    hSplitPane.resetToPreferredSizes();
+                    cbIntruder.setEnabled(true);
+                    cbProxy.setEnabled(true);
+                    cbRepeater.setEnabled(true);
+                    cbScanner.setEnabled(true);
+                    cbSequencer.setEnabled(true);
+                    cbSpider.setEnabled(true);
+                } else {
+                    cbIntruder.setEnabled(false);
+                    cbProxy.setEnabled(false);
+                    cbRepeater.setEnabled(false);
+                    cbScanner.setEnabled(false);
+                    cbSequencer.setEnabled(false);
+                    cbSpider.setEnabled(false);
+                }
+
+            });
+            scriptRefChangeConsumer.accept(scriptRef, Action.UPDATE);
+        });
+
         cbProxy.addItemListener(e->changeTools(IBurpExtenderCallbacks.TOOL_PROXY, cbProxy.isSelected()));
         cbSpider.addItemListener(e->changeTools(IBurpExtenderCallbacks.TOOL_SPIDER, cbSpider.isSelected()));
         cbScanner.addItemListener(e->changeTools(IBurpExtenderCallbacks.TOOL_SCANNER, cbScanner.isSelected()));
@@ -209,7 +248,7 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
         cbSequencer.addItemListener(e->changeTools(IBurpExtenderCallbacks.TOOL_SEQUENCER, cbSequencer.isSelected()));
 
         tfName.getDocument().addDocumentListener(documentListener);
-        tfDesc.getDocument().addDocumentListener(documentListener);
+//        tfDesc.getDocument().addDocumentListener(documentListener);
         requestScript.addDocumentListener(documentListener);
         responseScript.addDocumentListener(documentListener);
 

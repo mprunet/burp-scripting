@@ -1,0 +1,2 @@
+json = macros[0].getResponseBodyAsJson('UTF-8');
+token = json.token;

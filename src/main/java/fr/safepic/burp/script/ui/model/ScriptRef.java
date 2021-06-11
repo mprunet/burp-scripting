@@ -17,6 +17,7 @@ public class ScriptRef {
     private transient ScriptPanel panel;
     private String name;
     private String description;
+    private boolean sessionHandling;
     private String scriptRequest;
     private String scriptResponse;
     private transient ScriptRef backup;
@@ -39,6 +40,7 @@ public class ScriptRef {
         backup.tools = tools;
         backup.scriptRequest = scriptRequest;
         backup.scriptResponse = scriptResponse;
+        backup.sessionHandling = sessionHandling;
         return backup;
     }
 
@@ -50,6 +52,7 @@ public class ScriptRef {
         tools = backup.tools;
         scriptRequest = backup.scriptRequest;
         scriptResponse = backup.scriptResponse;
+        sessionHandling = backup.sessionHandling;
         backup = null;
     }
 
@@ -123,6 +126,7 @@ public class ScriptRef {
         }
         if (backup.isInScope() != isInScope()) return true;
         if (backup.getTools() != getTools()) return true;
+        if (!Objects.equals(backup.sessionHandling, sessionHandling)) return true;
         if (!Objects.equals(backup.getName(), getName())) return true;
         if (!Objects.equals(backup.getDescription(), getDescription())) return true;
         if (!Objects.equals(backup.getScriptRequest(), getScriptRequest())) return true;
@@ -138,6 +142,7 @@ public class ScriptRef {
         node.putBoolean("inScope", inScope);
         node.putInt("tools", tools);
         node.put("name", name);
+        node.putBoolean("sessionHandling", sessionHandling);
         node.put("description", description);
         node.put("scriptRequest", scriptRequest);
         node.put("scriptResponse", scriptResponse);
@@ -152,6 +157,7 @@ public class ScriptRef {
         ref.inScope = node.getBoolean("inScope", true);
         ref.tools = node.getInt("tools", 0);
         ref.name = node.get("name", node.name());
+        ref.sessionHandling = node.getBoolean("sessionHandling", false);
         ref.description = node.get("description", "");
         ref.scriptRequest = node.get("scriptRequest", "");
         ref.scriptResponse = node.get("scriptResponse", "");
@@ -175,6 +181,13 @@ public class ScriptRef {
         this.scriptError = scriptError;
     }
 
+    public boolean isSessionHandling() {
+        return sessionHandling;
+    }
+
+    public void setSessionHandling(boolean sessionHandling) {
+        this.sessionHandling = sessionHandling;
+    }
 /*
         private boolean local;
     private boolean enabled;

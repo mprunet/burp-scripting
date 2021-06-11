@@ -16,6 +16,7 @@ public class BurpExtender implements IBurpExtender {
             ScriptModifier modifier = new ScriptModifier(callbacks, panel.getScriptListPanel());
             callbacks.registerHttpListener(modifier);
             callbacks.registerProxyListener(modifier);
+            callbacks.registerSessionHandlingAction(modifier);
             callbacks.customizeUiComponent(panel.getScriptListPanel());
             callbacks.addSuiteTab(new ITab() {
                 @Override

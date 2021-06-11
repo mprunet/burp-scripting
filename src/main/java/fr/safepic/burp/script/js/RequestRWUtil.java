@@ -10,6 +10,7 @@ import org.mozilla.javascript.json.JsonParser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class RequestRWUtil extends AbstractRequestResponseUtil {
     private List<String> requestHeader;

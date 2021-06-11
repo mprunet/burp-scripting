@@ -14,11 +14,12 @@ import org.mozilla.javascript.ScriptableObject;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.function.Supplier;
 
 import static burp.IBurpExtenderCallbacks.TOOL_PROXY;
 
-public class ScriptModifier implements IHttpListener, IProxyListener {
+public class ScriptModifier implements IHttpListener, IProxyListener, ISessionHandlingAction {
     private final ScriptTablePanel panel;
     private final PrintWriter stdout;
     private final PrintWriter stderr;
@@ -37,7 +38,7 @@ public class ScriptModifier implements IHttpListener, IProxyListener {
     }
     @Override
     public void processProxyMessage(boolean request, IInterceptedProxyMessage iInterceptedProxyMessage) {
-        callScript(TOOL_PROXY, request, iInterceptedProxyMessage::getMessageInfo);
+        callScript(TOOL_PROXY, false, request, iInterceptedProxyMessage::getMessageInfo, null);
     }
 
 
@@ -46,7 +47,7 @@ public class ScriptModifier implements IHttpListener, IProxyListener {
         if (tools == TOOL_PROXY) {
             return;
         }
-        callScript(tools, request, ()->requestResponse);
+        callScript(tools, false, request, ()->requestResponse, null);
     }
 
 
@@ -100,10 +101,13 @@ public class ScriptModifier implements IHttpListener, IProxyListener {
         return sb;
     }
 
-    private void callScript(int burpTools, boolean request, Supplier<IHttpRequestResponse> supplierRequestResponse) {
+    private void callScript(int burpTools, boolean fromSession, boolean request, Supplier<IHttpRequestResponse> supplierRequestResponse, IHttpRequestResponse[] macros) {
         IHttpRequestResponse requestResponse = null;
         AbstractRequestResponseUtil tools = null;
         for (ScriptRef scriptRef : panel.getActiveScriptRef()) {
+            if (scriptRef.isSessionHandling() != fromSession) {
+                continue;
+            }
             JavascriptContext context = new JavascriptContext();
             if (requestResponse == null) {
                 requestResponse = supplierRequestResponse.get();
@@ -113,7 +117,7 @@ public class ScriptModifier implements IHttpListener, IProxyListener {
                     tools = new ResponseRWUtil(callbacks, requestResponse, context);
                 }
             }
-            if ((scriptRef.getTools() & burpTools) == 0
+            if (((scriptRef.getTools() & burpTools) == 0 && !scriptRef.isSessionHandling())
                || scriptRef.isScriptError()
                || scriptRef.isInScope() && !callbacks.isInScope(tools.request().getUrl())) {
                 continue;
@@ -136,11 +140,16 @@ public class ScriptModifier implements IHttpListener, IProxyListener {
                 Object wrappedRequestResponse = Context.javaToJS(requestResponse, scope);
                 Object wrappedTools = Context.javaToJS(tools, scope);
                 Object wrappedLog = Context.javaToJS(logCallback, scope);
-
+                if (macros != null) {
+                    ResponseRWUtil[] macrosRW = Arrays.stream(macros).map(m->new ResponseRWUtil(callbacks, m, context))
+                            .toArray(ResponseRWUtil[]::new);
+                    ScriptableObject.putProperty(scope, "macros", Context.javaToJS(macrosRW, scope));
+                }
                 ScriptableObject.putProperty(scope, "helper", Context.javaToJS(callbacks.getHelpers(), scope));
                 ScriptableObject.putProperty(scope, "requestResponse", wrappedRequestResponse);
                 ScriptableObject.putProperty(scope, "burpscriptingextension", wrappedTools);
                 ScriptableObject.putProperty(scope, "log", wrappedLog);
+
                 script.append(scriptContent);
                 // Execute the script
                 context.setCx(cx);
@@ -160,6 +169,18 @@ public class ScriptModifier implements IHttpListener, IProxyListener {
                 Context.exit();
             }
         }
+
+    }
+
+    @Override
+    public String getActionName() {
+        return "Scripting Extension";
+    }
+
+    @Override
+    public void performAction(IHttpRequestResponse currentRequest, IHttpRequestResponse[] macroItems) {
+        callScript(IBurpExtenderCallbacks.TOOL_SUITE, true, true, ()->currentRequest,
+                macroItems);
 
     }
 }
