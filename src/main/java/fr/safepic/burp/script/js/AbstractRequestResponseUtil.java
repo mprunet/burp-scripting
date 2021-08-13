@@ -112,7 +112,12 @@ public abstract class AbstractRequestResponseUtil {
         return false;
     }
 
-
+    public String getMethod() {
+        List<String> headers = requestHeaders(false);
+        String url = headers.get(0).trim();
+        int end = url.indexOf(' ');
+        return url.substring(0, end);
+    }
 
     public String getUrl() {
         

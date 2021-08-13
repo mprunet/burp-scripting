@@ -8,6 +8,9 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.NativeJSON;
 import org.mozilla.javascript.json.JsonParser;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
@@ -123,6 +126,13 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
         headers.set(0, oldUrl.substring(0, begin+1) + url + oldUrl.substring(end));
     }
 
+    public void setMethod(String method) {
+        List<String> headers  = requestHeaders(true);
+        String oldUrl = headers.get(0);
+        int end = oldUrl.indexOf(' ');
+        headers.set(0, method + oldUrl.substring(end));
+    }
+
     /**
      * Set a href in the URL
      * @param href: the href value
@@ -169,6 +179,12 @@ public class RequestRWUtil extends AbstractRequestResponseUtil {
         return requestBodyModifed || (requestHeader != null && !requestHeader.equals(initialRequestHeader()));
     }
 
+
+    public void setRequestAsFile(String fileName) throws IOException {
+        commit();
+        byte[] content = Files.readAllBytes(Paths.get(fileName));
+        requestResponse().setRequest(content);
+    }
 
     /**
      * Save the request, useful in case of mixing Burp native method and helper method.

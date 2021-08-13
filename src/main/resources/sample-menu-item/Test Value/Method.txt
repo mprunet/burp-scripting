@@ -1,0 +1,3 @@
+if (getMethod()=='PUT') {
+// Your code goes here
+}
