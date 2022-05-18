@@ -27,6 +27,7 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
     private final JCheckBox cbIntruder = new JCheckBox("Intruder");
     private final JCheckBox cbRepeater = new JCheckBox("Repeater");
     private final JCheckBox cbSequencer = new JCheckBox("Sequencer");
+    private final JCheckBox cbExtension = new JCheckBox("Extension");
     private final JLabel labelName = new JLabel("Name: ");
     private final JTextField tfName = new JTextField(20);
 /*    private final JLabel labelDesc = new JLabel("Description: ");
@@ -83,12 +84,14 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
             cbIntruder.setSelected((scriptRef.getTools() & IBurpExtenderCallbacks.TOOL_INTRUDER) != 0);
             cbRepeater.setSelected((scriptRef.getTools() & IBurpExtenderCallbacks.TOOL_REPEATER) != 0);
             cbSequencer.setSelected((scriptRef.getTools() & IBurpExtenderCallbacks.TOOL_SEQUENCER) != 0);
+            cbExtension.setSelected((scriptRef.getTools() & IBurpExtenderCallbacks.TOOL_EXTENDER) != 0);
             cbSessionHandling.setSelected(scriptRef.isSessionHandling());
             cbIntruder.setEnabled(!scriptRef.isSessionHandling());
             cbProxy.setEnabled(!scriptRef.isSessionHandling());
             cbRepeater.setEnabled(!scriptRef.isSessionHandling());
             cbScanner.setEnabled(!scriptRef.isSessionHandling());
             cbSequencer.setEnabled(!scriptRef.isSessionHandling());
+            cbExtension.setEnabled(!scriptRef.isSessionHandling());
             cbSpider.setEnabled(!scriptRef.isSessionHandling());
         } finally {
             updateObject=true;
@@ -189,7 +192,7 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
 
         add(labIntercept, new GridBagConstraints(0, ++line, 1, 1, 0.0, 0.0
                 , LINE_START, NONE, new Insets(2, 2, 2, 2), 5, 5));
-        addComponent(line, 1, cbProxy, cbSpider, cbScanner, cbIntruder, cbRepeater, cbSequencer);
+        addComponent(line, 1, cbProxy, cbSpider, cbScanner, cbIntruder, cbRepeater, cbSequencer, cbExtension);
         line = addTextFieldWithLabel(maxColumn, line, labelName, tfName);
         add(cbSessionHandling, new GridBagConstraints(0, ++line, maxColumn, 1, 0.0, 0.0
                 , LINE_START, NONE, new Insets(2, 2, 2, 2), 5, 5));
@@ -226,6 +229,7 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
                     cbRepeater.setEnabled(true);
                     cbScanner.setEnabled(true);
                     cbSequencer.setEnabled(true);
+                    cbExtension.setEnabled(true);
                     cbSpider.setEnabled(true);
                 } else {
                     cbIntruder.setEnabled(false);
@@ -233,6 +237,7 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
                     cbRepeater.setEnabled(false);
                     cbScanner.setEnabled(false);
                     cbSequencer.setEnabled(false);
+                    cbExtension.setEnabled(false);
                     cbSpider.setEnabled(false);
                 }
 
@@ -246,6 +251,7 @@ public class ScriptPanel extends JPanel implements Scrollable, ComponentListener
         cbIntruder.addItemListener(e->changeTools(IBurpExtenderCallbacks.TOOL_INTRUDER, cbIntruder.isSelected()));
         cbRepeater.addItemListener(e->changeTools(IBurpExtenderCallbacks.TOOL_REPEATER, cbRepeater.isSelected()));
         cbSequencer.addItemListener(e->changeTools(IBurpExtenderCallbacks.TOOL_SEQUENCER, cbSequencer.isSelected()));
+        cbExtension.addItemListener(e->changeTools(IBurpExtenderCallbacks.TOOL_EXTENDER, cbExtension.isSelected()));
 
         tfName.getDocument().addDocumentListener(documentListener);
 //        tfDesc.getDocument().addDocumentListener(documentListener);

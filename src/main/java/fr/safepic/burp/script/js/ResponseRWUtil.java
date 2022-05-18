@@ -140,7 +140,7 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
     }
 
     public String getResponseBodyAsString(String encoding) {
-        return decodeBody(getResponseBody(), encoding, ()->getRequestHeader("Content-Type"));
+        return decodeBody(getResponseBody(), encoding, ()->getResponseHeader("Content-Type"));
     }
 
     public Object getResponseBodyAsJson(String encoding) throws JsonParser.ParseException {
