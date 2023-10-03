@@ -5,6 +5,9 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.NativeJSON;
 import org.mozilla.javascript.json.JsonParser;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -91,6 +94,13 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
         }
     }
 
+    public void setStatusMessage(String s) {
+        List<String> headers = responseHeaders(true);
+        String oldStatus = headers.get(0);
+        headers.set(0, "HTTP/1.1 "+s);
+        logCallback.verbose("Status Header " + oldStatus + " replaced by" +  headers.get(0));
+    }
+
     public void setResponseHeader(String header, String value) {
         List<String> headers = responseHeaders(true);
         boolean set = false;
@@ -161,6 +171,12 @@ public class ResponseRWUtil extends AbstractRequestResponseUtil {
     public void setResponseBodyAsJson(Object json) {
         Object jsonStringify = NativeJSON.stringify(context.getCx(), context.getScope(), json, null, null);
         setResponseBodyAsString((String)Context.jsToJava(jsonStringify,String.class));
+    }
+
+    public void setResponseAsFile(String fileName) throws IOException {
+        commit();
+        byte[] content = Files.readAllBytes(Paths.get(fileName));
+        requestResponse().setResponse(content);
     }
 
 
